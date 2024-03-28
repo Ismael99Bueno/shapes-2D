@@ -94,9 +94,7 @@ mtv_result epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec
     KIT_ASSERT_ERROR(threshold > 0.f, "EPA Threshold must be greater than 0: {0}", threshold)
     KIT_PERF_FUNCTION()
 
-    std::vector<glm::vec2> hull;
-    hull.reserve(10);
-    hull.insert(hull.end(), simplex.begin(), simplex.end());
+    kit::dynarray<glm::vec2, 12> hull{simplex.begin(), simplex.end()};
 
     float min_dist = FLT_MAX;
     mtv_result result{false, glm::vec2(0.f)};
@@ -130,7 +128,7 @@ mtv_result epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec
         const glm::vec2 support = sh1.support_point(result.mtv) - sh2.support_point(-result.mtv);
         const float sup_dist = glm::dot(result.mtv, support);
         const float diff = std::abs(sup_dist - min_dist);
-        if (diff <= threshold)
+        if (diff <= threshold || hull.size() == hull.capacity())
             break;
         hull.insert(hull.begin() + min_index, support);
         min_dist = FLT_MAX;
