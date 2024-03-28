@@ -3,8 +3,8 @@
 #include <glm/vec2.hpp>
 #include <glm/mat2x2.hpp>
 #include "geo/shapes2D/aabb2D.hpp"
+#include "geo/algorithm/transform2D.hpp"
 
-#include "kit/utility/transform.hpp"
 #include "kit/serialization/yaml/serializer.hpp"
 
 namespace geo
@@ -23,15 +23,15 @@ class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
     void begin_update();
     void end_update();
 
-    const kit::transform2D<float> *parent() const;
-    void parent(const kit::transform2D<float> *parent);
+    const transform2D *parent() const;
+    void parent(const transform2D *parent);
 
     const aabb2D &bounding_box() const;
     virtual void bound() = 0;
 
     virtual glm::vec2 closest_direction_from(const glm::vec2 &p) const = 0;
 
-    const kit::transform2D<float> &ltransform() const;
+    const transform2D &ltransform() const;
     void ltransform(const kit::transform2D<float> &ltransform);
 
     const glm::vec2 &lcentroid() const;
@@ -62,7 +62,7 @@ class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
     void update();
 
   protected:
-    kit::transform2D<float> m_ltransform;
+    transform2D m_ltransform;
     glm::vec2 m_lcentroid;
     glm::vec2 m_gcentroid;
     aabb2D m_aabb;

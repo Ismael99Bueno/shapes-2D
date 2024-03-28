@@ -30,7 +30,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
     polygon(It it1, It it2)
         : vertices{.locals{it1, it2}, .globals{it1, it2}, .edges{it1, it2}, .normals{it1, it2}, .model{it1, it2}}
     {
-        m_ltransform.position = initialize_properties_and_vertices();
+        m_ltransform.position(initialize_properties_and_vertices());
         update();
     }
 
@@ -43,7 +43,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
                    .normals{verts.size()},
                    .model{verts.size()}}
     {
-        m_ltransform.position = initialize_properties_and_vertices();
+        m_ltransform.position(initialize_properties_and_vertices());
         update();
     }
     polygon(std::initializer_list<glm::vec2> verts)
@@ -53,7 +53,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
                    .normals{verts.size()},
                    .model{verts.size()}}
     {
-        m_ltransform.position = initialize_properties_and_vertices();
+        m_ltransform.position(initialize_properties_and_vertices());
         update();
     }
 
@@ -203,7 +203,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
         shape2D::on_shape_transform_update(ltransform, gtransform);
         for (std::size_t i = 0; i < vertices.size(); i++)
             vertices.locals(i) = ltransform * glm::vec3(vertices.model[i], 1.f);
-        if (m_ltransform.parent)
+        if (m_ltransform.parent())
             for (std::size_t i = 0; i < vertices.size(); i++)
                 vertices.globals(i) = gtransform * glm::vec3(vertices.model[i], 1.f);
         else

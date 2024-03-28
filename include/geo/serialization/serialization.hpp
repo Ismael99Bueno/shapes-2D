@@ -38,7 +38,7 @@ template <> struct kit::yaml::codec<geo::circle>
     static YAML::Node encode(const geo::circle &circ)
     {
         YAML::Node node;
-        node["Transform"] = circ.ltransform();
+        node["Transform"] = (const kit::transform2D<float> &)circ.ltransform();
         node["Radius"] = circ.radius();
 
         return node;
@@ -57,7 +57,7 @@ template <std::size_t Capacity> struct kit::yaml::codec<geo::polygon<Capacity>>
     static YAML::Node encode(const geo::polygon<Capacity> &poly)
     {
         YAML::Node node;
-        node["Transform"] = poly.ltransform();
+        node["Transform"] = (const kit::transform2D<float> &)poly.ltransform();
 
         for (std::size_t i = 0; i < poly.vertices.size(); i++)
         {
