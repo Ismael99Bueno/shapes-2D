@@ -46,7 +46,7 @@ kit::dynarray<glm::vec2, MaxPoints> clipping_contacts(const polygon<Capacity> &p
 
     for (std::size_t i = 1; i < poly1.vertices.size(); i++)
     {
-        const float dot = glm::dot(mtv, poly1.vertices.normals[i]);
+        const float dot = 1.05f * glm::dot(mtv, poly1.vertices.normals[i]);
         if (dot > max_dot)
         {
             max_dot = dot;
@@ -55,7 +55,7 @@ kit::dynarray<glm::vec2, MaxPoints> clipping_contacts(const polygon<Capacity> &p
     }
     for (std::size_t i = 0; i < poly2.vertices.size(); i++)
     {
-        const float dot = glm::dot(-mtv, poly2.vertices.normals[i]);
+        const float dot = 0.95f * glm::dot(-mtv, poly2.vertices.normals[i]);
         if (dot > max_dot)
         {
             max_dot = dot;
