@@ -73,13 +73,13 @@ kit::dynarray<glm::vec2, MaxPoints> clipping_contacts(const polygon<Capacity> &p
     for (std::size_t i = 0; i < inc_poly->vertices.size(); i++)
     {
         const float next_dot = glm::dot(inc_globals[i + 1] - start, normal);
-        if (current_dot <= 0.f)
+        if (current_dot < 0.f)
         {
             result.push_back(inc_globals[i]);
             if (result.size() == MaxPoints)
                 break;
         }
-        if (include_intersections && current_dot * next_dot < 0.f)
+        if (include_intersections && current_dot * next_dot < -0.06f)
         {
             const float current_abs = abs(current_dot);
             const float next_abs = abs(next_dot);
@@ -92,9 +92,6 @@ kit::dynarray<glm::vec2, MaxPoints> clipping_contacts(const polygon<Capacity> &p
 
         current_dot = next_dot;
     }
-    if (ref_poly != &poly1)
-        for (std::size_t i = 0; i < result.size(); i++)
-            result[i] += mtv;
     return result;
 }
 } // namespace geo
