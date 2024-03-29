@@ -3,7 +3,7 @@
 
 namespace geo
 {
-shape2D::shape2D(const kit::transform2D<float> &ltransform) : m_ltransform(ltransform)
+shape2D::shape2D(const transform2D &ltransform) : m_ltransform(ltransform)
 {
 }
 
@@ -11,7 +11,7 @@ const transform2D &shape2D::ltransform() const
 {
     return m_ltransform;
 }
-void shape2D::ltransform(const kit::transform2D<float> &ltransform)
+void shape2D::ltransform(const transform2D &ltransform)
 {
     m_ltransform = ltransform;
     update();

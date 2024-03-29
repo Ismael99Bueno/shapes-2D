@@ -12,7 +12,7 @@ namespace geo
 class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
 {
   public:
-    shape2D(const kit::transform2D<float> &ltransform);
+    shape2D(const transform2D &ltransform);
     shape2D() = default;
     virtual ~shape2D() = default;
 
@@ -32,7 +32,7 @@ class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
     virtual glm::vec2 closest_direction_from(const glm::vec2 &p) const = 0;
 
     const transform2D &ltransform() const;
-    void ltransform(const kit::transform2D<float> &ltransform);
+    void ltransform(const transform2D &ltransform);
 
     const glm::vec2 &lcentroid() const;
     const glm::vec2 &gcentroid() const;

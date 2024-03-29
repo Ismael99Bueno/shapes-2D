@@ -5,6 +5,7 @@ namespace geo
 {
 transform2D::transform2D(const kit::transform2D<float> &transform) : m_transform(transform)
 {
+    KIT_ASSERT_ERROR(!m_transform.parent, "Parent must be set explicitly with a geo transform2D instance")
 }
 
 const glm::vec2 &transform2D::position() const
@@ -33,7 +34,7 @@ const glm::mat3 &transform2D::ltransform() const
 {
     if (!m_cache)
     {
-        m_tmat = m_transform.center_scale_rotate_translate3();
+        m_tmat = m_transform.center_scale_rotate_translate3(true);
         m_cache = true;
     }
     return m_tmat;
@@ -87,6 +88,7 @@ void transform2D::rotation(float rotation)
 }
 void transform2D::parent(const transform2D *parent)
 {
+    m_transform.parent = &parent->get();
     m_parent = parent;
 }
 
@@ -103,7 +105,7 @@ void transform2D::rotate(float drotation)
     m_inv_cache = false;
 }
 
-transform2D::operator const kit::transform2D<float> &()
+const kit::transform2D<float> &transform2D::get() const
 {
     return m_transform;
 }

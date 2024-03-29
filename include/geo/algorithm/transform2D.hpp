@@ -8,7 +8,7 @@ class transform2D
 {
   public:
     transform2D() = default;
-    transform2D(const kit::transform2D<float> &transform);
+    explicit transform2D(const kit::transform2D<float> &transform);
 
     const glm::vec2 &position() const;
     const glm::vec2 &scale() const;
@@ -31,7 +31,7 @@ class transform2D
     void translate(const glm::vec2 &dpos);
     void rotate(float drotation);
 
-    operator const kit::transform2D<float> &();
+    const kit::transform2D<float> &get() const;
 
   private:
     kit::transform2D<float> m_transform;

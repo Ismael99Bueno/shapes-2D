@@ -58,7 +58,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
     }
 
     template <std::input_iterator It>
-    polygon(const kit::transform2D<float> &ltransform, It it1, It it2)
+    polygon(const transform2D &ltransform, It it1, It it2)
         : shape2D(ltransform),
           vertices{.locals{it1, it2}, .globals{it1, it2}, .edges{it1, it2}, .normals{it1, it2}, .model{it1, it2}}
     {
@@ -68,7 +68,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
 
     template <std::size_t Size>
         requires(Size >= 3 && Size <= Capacity)
-    polygon(const kit::transform2D<float> &ltransform, const kit::dynarray<glm::vec2, Size> &verts = square(1.f))
+    polygon(const transform2D &ltransform, const kit::dynarray<glm::vec2, Size> &verts = square(1.f))
         : shape2D(ltransform), vertices{.locals{verts},
                                         .globals{verts.size()},
                                         .edges{verts.size()},
@@ -78,7 +78,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
         initialize_properties_and_vertices();
         update();
     }
-    polygon(const kit::transform2D<float> &ltransform, std::initializer_list<glm::vec2> verts)
+    polygon(const transform2D &ltransform, std::initializer_list<glm::vec2> verts)
         : shape2D(ltransform), vertices{.locals{verts},
                                         .globals{verts.size()},
                                         .edges{verts.size()},

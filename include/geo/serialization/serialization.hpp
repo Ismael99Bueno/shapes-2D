@@ -38,7 +38,7 @@ template <> struct kit::yaml::codec<geo::circle>
     static YAML::Node encode(const geo::circle &circ)
     {
         YAML::Node node;
-        node["Transform"] = (const kit::transform2D<float> &)circ.ltransform();
+        node["Transform"] = circ.ltransform().get();
         node["Radius"] = circ.radius();
 
         return node;
@@ -47,7 +47,7 @@ template <> struct kit::yaml::codec<geo::circle>
     {
         if (!node.IsMap() || node.size() != 2)
             return false;
-        circ = {node["Transform"].as<kit::transform2D<float>>(), node["Radius"].as<float>()};
+        circ = {geo::transform2D{node["Transform"].as<kit::transform2D<float>>()}, node["Radius"].as<float>()};
         return true;
     }
 };
@@ -57,7 +57,7 @@ template <std::size_t Capacity> struct kit::yaml::codec<geo::polygon<Capacity>>
     static YAML::Node encode(const geo::polygon<Capacity> &poly)
     {
         YAML::Node node;
-        node["Transform"] = (const kit::transform2D<float> &)poly.ltransform();
+        node["Transform"] = poly.ltransform().get();
 
         for (std::size_t i = 0; i < poly.vertices.size(); i++)
         {
@@ -77,7 +77,7 @@ template <std::size_t Capacity> struct kit::yaml::codec<geo::polygon<Capacity>>
             vertices[i] = node_v[i].as<glm::vec2>();
 
         const kit::transform2D<float> transform = node["Transform"].as<kit::transform2D<float>>();
-        poly = {transform, vertices};
+        poly = {geo::transform2D{transform}, vertices};
         return true;
     }
 };
