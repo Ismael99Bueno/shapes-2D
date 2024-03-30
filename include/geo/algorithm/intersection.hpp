@@ -34,13 +34,11 @@ bool intersects(const circle &c1, const circle &c2);
 mtv_result2D mtv(const circle &c1, const circle &c2);
 glm::vec2 radius_distance_contact_point(const circle &c1, const circle &c2);
 
-template <std::size_t Capacity>
-glm::vec2 radius_penetration_contact_point(const circle &circ, const polygon<Capacity> &poly, const glm::vec2 &mtv)
+template <std::size_t Capacity> glm::vec2 radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv)
 {
     return circ.gcentroid() + circ.radius() * glm::normalize(mtv) - mtv;
 }
-template <std::size_t Capacity>
-glm::vec2 radius_penetration_contact_point(const polygon<Capacity> &poly, const circle &circ, const glm::vec2 &mtv)
+template <std::size_t Capacity> glm::vec2 radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv)
 {
     return circ.gcentroid() - circ.radius() * glm::normalize(mtv) + mtv;
 }
