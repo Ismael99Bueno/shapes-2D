@@ -58,13 +58,13 @@ static bool triangle_case(arr3 &simplex, glm::vec2 &dir)
     return true;
 }
 
-gjk_result gjk(const shape2D &sh1, const shape2D &sh2)
+gjk_result2D gjk(const shape2D &sh1, const shape2D &sh2)
 {
     KIT_PERF_FUNCTION()
     KIT_ASSERT_WARN(!dynamic_cast<const circle *>(&sh1) || !dynamic_cast<const circle *>(&sh2),
                     "Using gjk algorithm to check if two circles are intersecting is overkill")
 
-    gjk_result result{false, {}};
+    gjk_result2D result{false, {}};
     arr3 simplex{result.simplex};
 
     glm::vec2 dir = sh2.gcentroid() - sh1.gcentroid();
@@ -89,7 +89,7 @@ gjk_result gjk(const shape2D &sh1, const shape2D &sh2)
     }
 }
 
-mtv_result epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec2, 3> &simplex, const float threshold)
+mtv_result2D epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec2, 3> &simplex, const float threshold)
 {
     KIT_ASSERT_ERROR(threshold > 0.f, "EPA Threshold must be greater than 0: {0}", threshold)
     KIT_PERF_FUNCTION()
@@ -97,7 +97,7 @@ mtv_result epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec
     kit::dynarray<glm::vec2, 12> hull{simplex.begin(), simplex.end()};
 
     float min_dist = FLT_MAX;
-    mtv_result result{false, glm::vec2(0.f)};
+    mtv_result2D result{false, glm::vec2(0.f)};
     for (;;)
     {
         std::size_t min_index;
@@ -174,9 +174,9 @@ bool intersects(const circle &c1, const circle &c2)
     const float R = c1.radius() + c2.radius();
     return glm::distance2(c1.gcentroid(), c2.gcentroid()) < R * R;
 }
-mtv_result mtv(const circle &c1, const circle &c2)
+mtv_result2D mtv(const circle &c1, const circle &c2)
 {
-    mtv_result result;
+    mtv_result2D result;
 
     const glm::vec2 dir = c1.gcentroid() - c2.gcentroid();
     result.mtv = dir - (c1.radius() + c2.radius()) * glm::normalize(dir);
