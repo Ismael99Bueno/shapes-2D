@@ -46,21 +46,21 @@ struct contact_feature
     contact_feature() = default;
     contact_feature(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped);
 
-    std::uint8_t index1;
-    std::uint8_t index2;
-    std::uint8_t type1;
-    std::uint8_t type2;
+    std::uint8_t index1 = 0;
+    std::uint8_t index2 = 0;
+    std::uint8_t type1 = 0;
+    std::uint8_t type2 = 0;
 };
 
 union contact_id {
-    contact_feature feature;
+    contact_feature feature{};
     std::uint32_t key;
 };
 
 struct contact_point2D
 {
     glm::vec2 point;
-    contact_id id;
+    contact_id id{};
 };
 
 template <std::size_t Capacity>
@@ -148,6 +148,7 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
     const kit::dynarray<contact_point2D, 2> unclipped{{inc_poly->vertices.globals[iidx1], {cf1}},
                                                       {inc_poly->vertices.globals[iidx2], {cf2}}};
 
+    // must do something if clipped is empty
     kit::dynarray<contact_point2D, 2> clipped = clip_contact(unclipped, ridx1, -ref_tangent);
     clipped = clip_contact(clipped, ridx2, ref_tangent);
 
