@@ -107,9 +107,9 @@ void shape2D::gtranslate(const glm::vec2 &dpos)
     if (m_ltransform.parent())
     {
         if (m_ltransform.parent()->parent())
-            m_ltransform.translate(glm::vec2(m_ltransform.parent()->gtransform() * glm::vec3(dpos, 0.f)));
+            m_ltransform.translate(glm::vec2(m_ltransform.parent()->inv_gtransform() * glm::vec3(dpos, 0.f)));
         else
-            m_ltransform.translate(glm::vec2(m_ltransform.parent()->ltransform() * glm::vec3(dpos, 0.f)));
+            m_ltransform.translate(glm::vec2(m_ltransform.parent()->inv_ltransform() * glm::vec3(dpos, 0.f)));
     }
     else
         ltranslate(dpos);
