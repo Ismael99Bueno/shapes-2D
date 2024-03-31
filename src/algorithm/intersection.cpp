@@ -189,4 +189,19 @@ glm::vec2 radius_distance_contact_point(const circle &c1, const circle &c2)
     const glm::vec2 dir = glm::normalize(c1.gcentroid() - c2.gcentroid());
     return c1.gcentroid() - dir * c1.radius();
 }
+glm::vec2 radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv)
+{
+    return circ.gcentroid() + circ.radius() * glm::normalize(mtv);
+}
+
+contact_feature::contact_feature(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped)
+    : index1((std::uint8_t)index1), index2((std::uint8_t)index2), type1((std::uint8_t)type1), type2((std::uint8_t)type2)
+{
+    if (flipped)
+    {
+        std::swap(this->index1, this->index2);
+        std::swap(this->type1, this->type2);
+    }
+}
+
 } // namespace geo

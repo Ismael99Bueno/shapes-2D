@@ -32,24 +32,20 @@ bool intersects(const aabb2D &bb, const glm::vec2 &point);
 bool intersects(const circle &c1, const circle &c2);
 
 mtv_result2D mtv(const circle &c1, const circle &c2);
-glm::vec2 radius_distance_contact_point(const circle &c1, const circle &c2);
 
-template <std::size_t Capacity> glm::vec2 radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv)
-{
-    return circ.gcentroid() + circ.radius() * glm::normalize(mtv) - mtv;
-}
-template <std::size_t Capacity> glm::vec2 radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv)
-{
-    return circ.gcentroid() - circ.radius() * glm::normalize(mtv) + mtv;
-}
+glm::vec2 radius_distance_contact_point(const circle &c1, const circle &c2);
+glm::vec2 radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv);
 
 struct contact_feature
 {
     enum class type
     {
         VERTEX = 0,
-        NORMAL = 1
+        FACE = 1
     };
+    contact_feature() = default;
+    contact_feature(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped);
+
     std::uint8_t index1;
     std::uint8_t index2;
     std::uint8_t type1;
@@ -67,12 +63,12 @@ struct contact_point2D
     contact_id id;
 };
 
-template <std::size_t MaxPoints, std::size_t Capacity>
-kit::dynarray<contact_point2D, MaxPoints> clipping_contacts(const polygon<Capacity> &poly1,
-                                                            const polygon<Capacity> &poly2, const glm::vec2 &mtv)
+template <std::size_t Capacity>
+kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &poly1, const polygon<Capacity> &poly2,
+                                                    const glm::vec2 &mtv)
 {
-    float max_dot = glm::dot(mtv, poly1.vertices.normals[0]);
-    std::size_t normal_index = 0;
+    float max_dot = 1.05f * glm::dot(mtv, poly1.vertices.normals[0]);
+    std::size_t ref_index = 0;
 
     const polygon<Capacity> *ref_poly = &poly1;
     const polygon<Capacity> *inc_poly = &poly2;
@@ -83,7 +79,7 @@ kit::dynarray<contact_point2D, MaxPoints> clipping_contacts(const polygon<Capaci
         if (dot > max_dot)
         {
             max_dot = dot;
-            normal_index = i;
+            ref_index = i;
         }
     }
     bool flipped = false;
@@ -93,30 +89,76 @@ kit::dynarray<contact_point2D, MaxPoints> clipping_contacts(const polygon<Capaci
         if (dot > max_dot)
         {
             max_dot = dot;
-            normal_index = i;
+            ref_index = i;
             ref_poly = &poly2;
             inc_poly = &poly1;
             flipped = true;
         }
     }
-    const glm::vec2 &normal = ref_poly->vertices.normals[normal_index];
-    const glm::vec2 &start = ref_poly->vertices.globals[normal_index];
-    const auto &inc_globals = inc_poly->vertices.globals;
 
-    kit::dynarray<contact_point2D, MaxPoints> result;
-    for (std::size_t i = 0; i < inc_poly->vertices.size(); i++)
+    const glm::vec2 &ref_normal = ref_poly->vertices.normals[ref_index];
+    float min_dot = glm::dot(ref_normal, inc_poly->vertices.normals[0]);
+    std::size_t inc_index = 0;
+    for (std::size_t i = 1; i < inc_poly->vertices.size(); i++)
     {
-        const float dot = glm::dot(inc_globals[i] - start, normal);
-        if (dot < 0.f)
+        const float dot = glm::dot(ref_normal, inc_poly->vertices.normals[i]);
+        if (dot < min_dot)
         {
-            const contact_feature cf{flipped ? (std::uint8_t)i : (std::uint8_t)normal_index,
-                                     flipped ? (std::uint8_t)normal_index : (std::uint8_t)i,
-                                     (std::uint8_t)(flipped ? 0u : 1u), (std::uint8_t)(flipped ? 1u : 0u)};
-            result.push_back({inc_globals[i], {cf}});
-            if (result.size() == MaxPoints)
-                return result;
+            min_dot = dot;
+            inc_index = i;
         }
     }
-    return result;
+
+    const auto clip_contact = [ref_poly, flipped](const kit::dynarray<contact_point2D, 2> &unclipped,
+                                                  const std::size_t ridx, const glm::vec2 &ref_tangent) {
+        kit::dynarray<contact_point2D, 2> clipped;
+
+        const glm::vec2 &rv = ref_poly->vertices.globals[ridx];
+        const glm::vec2 &iv1 = unclipped[0].point;
+        const glm::vec2 &iv2 = unclipped[1].point;
+
+        const float side_pntr1 = glm::dot(ref_tangent, iv1 - rv);
+        const float side_pntr2 = glm::dot(ref_tangent, iv2 - rv);
+        if (side_pntr1 < 0.f)
+            clipped.push_back(unclipped[0]);
+        if (side_pntr2 < 0.f)
+            clipped.push_back(unclipped[1]);
+
+        if (side_pntr1 * side_pntr2 < 0.f)
+        {
+            const float lerp = side_pntr1 / (side_pntr1 - side_pntr2);
+            const glm::vec2 point = iv1 + lerp * (iv2 - iv1);
+            const contact_feature cf{ridx, unclipped[0].id.feature.index1, contact_feature::type::VERTEX,
+                                     contact_feature::type::FACE, flipped};
+            clipped.push_back({point, {cf}});
+        }
+        return clipped;
+    };
+
+    const std::size_t iidx1 = inc_index;
+    const std::size_t iidx2 = (inc_index + 1) % inc_poly->vertices.size();
+
+    const std::size_t ridx1 = ref_index;
+    const std::size_t ridx2 = (ref_index + 1) % ref_poly->vertices.size();
+
+    const glm::vec2 ref_tangent = glm::vec2{-ref_normal.y, ref_normal.x};
+
+    const contact_feature cf1{ridx1, iidx1, contact_feature::type::FACE, contact_feature::type::VERTEX, flipped};
+    const contact_feature cf2{ridx2, iidx2, contact_feature::type::FACE, contact_feature::type::VERTEX, flipped};
+    const kit::dynarray<contact_point2D, 2> unclipped{{inc_poly->vertices.globals[iidx1], {cf1}},
+                                                      {inc_poly->vertices.globals[iidx2], {cf2}}};
+
+    kit::dynarray<contact_point2D, 2> clipped = clip_contact(unclipped, ridx1, -ref_tangent);
+    clipped = clip_contact(clipped, ridx2, ref_tangent);
+
+    for (auto it = clipped.begin(); it != clipped.end();)
+    {
+        const float front_pntr = glm::dot(ref_normal, it->point - ref_poly->vertices.globals[ridx1]);
+        if (front_pntr >= 0.f)
+            it = clipped.erase(it);
+        else
+            ++it;
+    }
+    return clipped;
 }
 } // namespace geo
