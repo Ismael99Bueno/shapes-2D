@@ -19,23 +19,6 @@ struct mtv_result2D
     bool valid;
     glm::vec2 mtv;
 };
-
-gjk_result2D gjk(const shape2D &sh1, const shape2D &sh2);
-mtv_result2D epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec2, 3> &simplex,
-                 float threshold = 1.e-3f);
-
-glm::vec2 mtv_support_contact_point(const shape2D &sh1, const shape2D &sh2, const glm::vec2 &mtv);
-bool may_intersect(const shape2D &sh1, const shape2D &sh2);
-
-bool intersects(const aabb2D &bb1, const aabb2D &bb2);
-bool intersects(const aabb2D &bb, const glm::vec2 &point);
-bool intersects(const circle &c1, const circle &c2);
-
-mtv_result2D mtv(const circle &c1, const circle &c2);
-
-glm::vec2 radius_distance_contact_point(const circle &c1, const circle &c2);
-glm::vec2 radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv);
-
 struct contact_feature
 {
     enum class type
@@ -46,22 +29,37 @@ struct contact_feature
     contact_feature() = default;
     contact_feature(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped);
 
-    std::uint8_t index1 = 0;
-    std::uint8_t index2 = 0;
-    std::uint8_t type1 = 0;
-    std::uint8_t type2 = 0;
+    std::uint8_t index1;
+    std::uint8_t index2;
+    std::uint8_t type1;
+    std::uint8_t type2;
 };
-
 union contact_id {
     contact_feature feature{};
     std::uint32_t key;
 };
-
 struct contact_point2D
 {
     glm::vec2 point;
     contact_id id{};
+    float penetration;
 };
+
+gjk_result2D gjk(const shape2D &sh1, const shape2D &sh2);
+mtv_result2D epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec2, 3> &simplex,
+                 float threshold = 1.e-3f);
+
+bool may_intersect(const shape2D &sh1, const shape2D &sh2);
+
+bool intersects(const aabb2D &bb1, const aabb2D &bb2);
+bool intersects(const aabb2D &bb, const glm::vec2 &point);
+bool intersects(const circle &c1, const circle &c2);
+
+mtv_result2D mtv(const circle &c1, const circle &c2);
+
+contact_point2D mtv_support_contact_point(const shape2D &sh1, const shape2D &sh2, const glm::vec2 &mtv);
+contact_point2D radius_distance_contact_point(const circle &c1, const circle &c2, const glm::vec2 &mtv);
+contact_point2D radius_penetration_contact_point(const circle &circ, const glm::vec2 &mtv);
 
 template <std::size_t Capacity>
 kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &poly1, const polygon<Capacity> &poly2,
@@ -130,7 +128,7 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
             const glm::vec2 point = iv1 + lerp * (iv2 - iv1);
             const contact_feature cf{ridx, unclipped[0].id.feature.index1, contact_feature::type::VERTEX,
                                      contact_feature::type::FACE, flipped};
-            clipped.push_back({point, {cf}});
+            clipped.push_back({point, {cf}, 0.f});
         }
         return clipped;
     };
@@ -145,8 +143,8 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
 
     const contact_feature cf1{ridx1, iidx1, contact_feature::type::FACE, contact_feature::type::VERTEX, flipped};
     const contact_feature cf2{ridx2, iidx2, contact_feature::type::FACE, contact_feature::type::VERTEX, flipped};
-    const kit::dynarray<contact_point2D, 2> unclipped{{inc_poly->vertices.globals[iidx1], {cf1}},
-                                                      {inc_poly->vertices.globals[iidx2], {cf2}}};
+    const kit::dynarray<contact_point2D, 2> unclipped{{inc_poly->vertices.globals[iidx1], {cf1}, 0.f},
+                                                      {inc_poly->vertices.globals[iidx2], {cf2}, 0.f}};
 
     // must do something if clipped is empty
     kit::dynarray<contact_point2D, 2> clipped = clip_contact(unclipped, ridx1, -ref_tangent);
@@ -158,7 +156,10 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
         if (front_pntr >= 0.f)
             it = clipped.erase(it);
         else
+        {
+            it->penetration = front_pntr;
             ++it;
+        }
     }
     return clipped;
 }
