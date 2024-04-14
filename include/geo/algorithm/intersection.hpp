@@ -146,9 +146,18 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
     const kit::dynarray<contact_point2D, 2> unclipped{{inc_poly->vertices.globals[iidx1], {cf1}, 0.f},
                                                       {inc_poly->vertices.globals[iidx2], {cf2}, 0.f}};
 
-    // must do something if clipped is empty
     kit::dynarray<contact_point2D, 2> clipped = clip_contact(unclipped, ridx1, -ref_tangent);
+    if (clipped.size() != 2)
+    {
+        clipped.clear();
+        return clipped;
+    }
     clipped = clip_contact(clipped, ridx2, ref_tangent);
+    if (clipped.size() != 2)
+    {
+        clipped.clear();
+        return clipped;
+    }
 
     for (auto it = clipped.begin(); it != clipped.end();)
     {
