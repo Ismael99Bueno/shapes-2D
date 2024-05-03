@@ -1,5 +1,3 @@
-#
-
 #include <glm/vec2.hpp>
 #include <vector>
 #include <utility>
