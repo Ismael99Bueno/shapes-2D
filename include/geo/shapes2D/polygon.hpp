@@ -127,7 +127,9 @@ template <std::size_t Capacity> class polygon final : public shape2D
         glm::vec2 closest(0.f);
         for (std::size_t i = 0; i < vertices.size(); i++)
         {
-            const glm::vec2 towards = towards_segment_from(vertices.globals[i], vertices.globals[i + 1], p);
+            const float interp = glm::clamp(
+                glm::dot(p - vertices.globals[i], vertices.edges[i]) / glm::length2(vertices.edges[i]), 0.f, 1.f);
+            const glm::vec2 towards = vertices.globals[i] + interp * vertices.edges[i] - p;
             const float dist = glm::length2(towards);
             if (min_dist > dist)
             {
@@ -347,13 +349,6 @@ template <std::size_t Capacity> class polygon final : public shape2D
                 return false;
 
         return true;
-    }
-
-    static glm::vec2 towards_segment_from(const glm::vec2 &p1, const glm::vec2 &p2, const glm::vec2 &p)
-    {
-        const float interp = std::clamp(glm::dot(p - p1, p2 - p1) / glm::distance2(p1, p2), 0.f, 1.f);
-        const glm::vec2 proj = p1 + interp * (p2 - p1);
-        return proj - p;
     }
 };
 } // namespace geo

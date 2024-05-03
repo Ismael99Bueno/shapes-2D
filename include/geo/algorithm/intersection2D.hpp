@@ -3,6 +3,7 @@
 #include "geo/shapes2D/circle.hpp"
 #include "geo/shapes2D/polygon.hpp"
 #include "geo/shapes2D/aabb2D.hpp"
+#include "geo/algorithm/ray2D.hpp"
 #include <glm/vec2.hpp>
 #include <array>
 #include <utility>
@@ -54,6 +55,33 @@ bool may_intersect(const shape2D &sh1, const shape2D &sh2);
 bool intersects(const aabb2D &bb1, const aabb2D &bb2);
 bool intersects(const aabb2D &bb, const glm::vec2 &point);
 bool intersects(const circle &c1, const circle &c2);
+ray2D::hit intersects(const aabb2D &bb, const ray2D &ray);
+ray2D::hit intersects(const circle &circ, const ray2D &ray);
+template <std::size_t Capacity> ray2D::hit intersects(const polygon<Capacity> &poly, const ray2D &ray)
+{
+    const glm::vec2 &origin = ray.origin();
+    const auto &globals = poly.vertices.globals;
+    float dot1 = glm::dot(ray.normal(), globals[0] - origin);
+    for (std::size_t i = 1; i < poly.vertices.size(); i++)
+    {
+        const glm::vec2 offset = globals[i] - origin;
+        const float dot2 = glm::dot(ray.normal(), offset);
+        const glm::vec2 &normal = poly.vertices.normals[i - 1];
+        if (dot1 * dot2 < 0.f && glm::dot(ray.direction(), offset) > 0.f && glm::dot(ray.direction(), normal) < 0.f)
+        {
+            const glm::vec2 &edge = poly.vertices.edges[i - 1];
+            const float interp = -glm::dot(offset, edge) / glm::length2(edge);
+            const glm::vec2 point = globals[i - 1] + interp * edge;
+            const float distance = glm::distance(origin, point);
+            if (ray.infinite() || ray.length() >= distance)
+                return {point, normal, distance, true};
+        }
+        dot1 = dot2;
+    }
+    ray2D::hit hit;
+    hit.hit = false;
+    return hit;
+}
 
 mtv_result2D mtv(const circle &c1, const circle &c2);
 

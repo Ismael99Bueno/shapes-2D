@@ -4,12 +4,13 @@
 namespace geo
 {
 ray2D::ray2D(const glm::vec2 &origin, const glm::vec2 &direction)
-    : m_origin(origin), m_dir(glm::normalize(direction)), m_infinte(true)
+    : m_origin(origin), m_dir(glm::normalize(direction)), m_normal(-m_dir.y, m_dir.x), m_infinte(true)
 {
 }
 
 ray2D::ray2D(const glm::vec2 &origin, const glm::vec2 &direction, float length)
-    : m_origin(origin), m_dir(glm::normalize(direction)), m_length(length), m_infinte(false)
+    : m_origin(origin), m_dir(glm::normalize(direction)), m_normal(-m_dir.y, m_dir.x), m_length(length),
+      m_infinte(false)
 {
 }
 
@@ -30,6 +31,10 @@ const glm::vec2 &ray2D::origin() const
 const glm::vec2 &ray2D::direction() const
 {
     return m_dir;
+}
+const glm::vec2 &ray2D::normal() const
+{
+    return m_normal;
 }
 float ray2D::length() const
 {

@@ -26,12 +26,14 @@ class ray2D
 
     const glm::vec2 &origin() const;
     const glm::vec2 &direction() const;
+    const glm::vec2 &normal() const;
     float length() const;
     bool infinite() const;
 
   private:
     glm::vec2 m_origin;
     glm::vec2 m_dir;
+    glm::vec2 m_normal;
     float m_length;
     bool m_infinte;
 };
