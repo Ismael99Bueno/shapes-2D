@@ -1,5 +1,5 @@
 #include "geo/internal/pch.hpp"
-#include "geo/algorithm/intersection.hpp"
+#include "geo/algorithm/intersection2D.hpp"
 #include "geo/shapes2D/polygon.hpp"
 
 #include "kit/utility/utils.hpp"
@@ -207,7 +207,7 @@ contact_point2D radius_penetration_contact_point(const circle &circ, const glm::
     return contact;
 }
 
-contact_feature::contact_feature(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped)
+contact_feature2D::contact_feature2D(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped)
     : index1((std::uint8_t)index1), index2((std::uint8_t)index2), type1((std::uint8_t)type1), type2((std::uint8_t)type2)
 {
     if (flipped)

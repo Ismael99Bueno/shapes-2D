@@ -19,29 +19,29 @@ struct mtv_result2D
     bool valid;
     glm::vec2 mtv;
 };
-struct contact_feature
+struct contact_feature2D
 {
     enum class type
     {
         VERTEX = 0,
         FACE = 1
     };
-    contact_feature() = default;
-    contact_feature(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped);
+    contact_feature2D() = default;
+    contact_feature2D(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped);
 
     std::uint8_t index1;
     std::uint8_t index2;
     std::uint8_t type1;
     std::uint8_t type2;
 };
-union contact_id {
-    contact_feature feature{};
+union contact_id2D {
+    contact_feature2D feature{};
     std::uint32_t key;
 };
 struct contact_point2D
 {
     glm::vec2 point;
-    contact_id id{};
+    contact_id2D id{};
     float penetration;
 };
 
@@ -126,8 +126,8 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
         {
             const float lerp = side_pntr1 / (side_pntr1 - side_pntr2);
             const glm::vec2 point = iv1 + lerp * (iv2 - iv1);
-            const contact_feature cf{ridx, unclipped[0].id.feature.index1, contact_feature::type::VERTEX,
-                                     contact_feature::type::FACE, flipped};
+            const contact_feature2D cf{ridx, unclipped[0].id.feature.index1, contact_feature2D::type::VERTEX,
+                                       contact_feature2D::type::FACE, flipped};
             clipped.push_back({point, {cf}, 0.f});
         }
         return clipped;
@@ -141,8 +141,8 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
 
     const glm::vec2 ref_tangent = glm::vec2{-ref_normal.y, ref_normal.x};
 
-    const contact_feature cf1{ridx1, iidx1, contact_feature::type::FACE, contact_feature::type::VERTEX, flipped};
-    const contact_feature cf2{ridx2, iidx2, contact_feature::type::FACE, contact_feature::type::VERTEX, flipped};
+    const contact_feature2D cf1{ridx1, iidx1, contact_feature2D::type::FACE, contact_feature2D::type::VERTEX, flipped};
+    const contact_feature2D cf2{ridx2, iidx2, contact_feature2D::type::FACE, contact_feature2D::type::VERTEX, flipped};
     const kit::dynarray<contact_point2D, 2> unclipped{{inc_poly->vertices.globals[iidx1], {cf1}, 0.f},
                                                       {inc_poly->vertices.globals[iidx2], {cf2}, 0.f}};
 
