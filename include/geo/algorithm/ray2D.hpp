@@ -14,7 +14,7 @@ class ray2D
         glm::vec2 point;
         glm::vec2 normal;
         float distance;
-        bool hit;
+        bool hit = false;
 
         operator bool() const;
     };
