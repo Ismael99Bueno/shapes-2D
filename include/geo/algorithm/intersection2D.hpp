@@ -14,11 +14,13 @@ struct gjk_result2D
 {
     bool intersect;
     std::array<glm::vec2, 3> simplex;
+    operator bool() const;
 };
 struct mtv_result2D
 {
     bool valid;
     glm::vec2 mtv;
+    operator bool() const;
 };
 struct contact_feature2D
 {

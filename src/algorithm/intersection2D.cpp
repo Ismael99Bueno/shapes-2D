@@ -6,6 +6,15 @@
 
 namespace geo
 {
+gjk_result2D::operator bool() const
+{
+    return intersect;
+}
+mtv_result2D::operator bool() const
+{
+    return valid;
+}
+
 static glm::vec2 triple_cross(const glm::vec2 &v1, const glm::vec2 &v2, const glm::vec2 &v3)
 {
     const float crs = kit::cross2D(v1, v2);
@@ -172,7 +181,7 @@ bool intersects(const aabb2D &bb, const ray2D &ray)
 
     float tmin = 0.f;
     float tmax = ray.length();
-    for (std::size_t i = 0; i < 2; i++)
+    for (int i = 0; i < 2; i++)
     {
         const float inv_dir = 1.f / dir[i];
         float t1 = (bb.min[i] - origin[i]) * inv_dir;
