@@ -9,16 +9,21 @@ namespace geo
 class ray2D
 {
   public:
-    struct hit
+    template <typename T> struct hit
     {
         glm::vec2 point;
         glm::vec2 normal;
         float distance;
         bool hit = false;
+        T *object = nullptr;
 
-        operator bool() const;
+        operator bool() const
+        {
+            return hit;
+        }
     };
 
+    ray2D() = default;
     ray2D(const glm::vec2 &origin, const glm::vec2 &direction);
     ray2D(const glm::vec2 &origin, const glm::vec2 &direction, float length);
 

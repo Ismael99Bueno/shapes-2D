@@ -58,27 +58,56 @@ bool intersects(const aabb2D &bb1, const aabb2D &bb2);
 bool intersects(const aabb2D &bb, const glm::vec2 &point);
 bool intersects(const circle &c1, const circle &c2);
 bool intersects(const aabb2D &bb, const ray2D &ray);
-ray2D::hit intersects(const circle &circ, const ray2D &ray);
-template <std::size_t Capacity> ray2D::hit intersects(const polygon<Capacity> &poly, const ray2D &ray)
+
+template <typename T> ray2D::hit<T> intersects(const circle &circ, const ray2D &ray, T *object = nullptr)
 {
     const glm::vec2 &origin = ray.origin();
-    const auto &globals = poly.vertices.globals;
-    float dot1 = glm::dot(ray.normal(), globals[0] - origin);
-    for (std::size_t i = 1; i < poly.vertices.size() + 1; i++)
+    const glm::vec2 &dir = ray.direction();
+    const glm::vec2 &center = circ.gcentroid();
+    const glm::vec2 OC = center - origin;
+    const float R2 = circ.radius() * circ.radius();
+    if (glm::dot(OC, dir) <= 0.f || glm::distance2(center, origin) <= R2)
+        return {};
+    if (!ray.infinite())
     {
-        const glm::vec2 offset = globals[i] - origin;
-        const float dot2 = glm::dot(ray.normal(), offset);
-        const glm::vec2 &normal = poly.vertices.normals[i - 1];
-        if (dot1 * dot2 < 0.f && glm::dot(normal, offset) < 0.f)
-        {
-            const glm::vec2 &edge = poly.vertices.edges[i - 1];
-            const float interp = -glm::dot(offset, edge) / glm::length2(edge);
-            const glm::vec2 point = globals[i - 1] + interp * edge;
-            const float distance = glm::distance(origin, point);
-            if (ray.infinite() || ray.length() >= distance)
-                return {point, normal, distance, true};
-        }
-        dot1 = dot2;
+        const glm::vec2 end = origin + dir * ray.length();
+        const glm::vec2 EC = center - end;
+        if (glm::dot(EC, dir) >= 0.f && glm::distance2(center, end) >= R2)
+            return {};
+    }
+
+    const glm::vec2 &normal = ray.normal();
+    const float pdist = -glm::dot(OC, normal);
+    const glm::vec2 proj = center + pdist * normal;
+    const glm::vec2 point = proj - dir * glm::sqrt(R2 - pdist * pdist);
+    return {point, glm::normalize(point - center), glm::distance(origin, point), true, object};
+}
+template <typename T, std::size_t Capacity>
+ray2D::hit<T> intersects(const polygon<Capacity> &poly, const ray2D &ray, T *object = nullptr)
+{
+    const glm::vec2 &origin = ray.origin();
+    const glm::vec2 &normal = ray.normal();
+    const glm::vec2 &dir = ray.direction();
+    const auto &globals = poly.vertices.globals;
+    for (std::size_t i = 0; i < poly.vertices.size(); i++)
+    {
+        const glm::vec2 &pnormal = poly.vertices.normals[i];
+        const float perpend = glm::dot(pnormal, dir);
+        if (perpend >= -1.e-6f)
+            continue;
+
+        const glm::vec2 &v = globals[i];
+        const glm::vec2 &edge = poly.vertices.edges[i];
+        const glm::vec2 offset = v - origin;
+
+        const float u = -glm::dot(offset, normal) / glm::dot(edge, normal);
+        if (u <= 0.f || u >= 1.f)
+            continue;
+        const float distance = glm::dot(offset, pnormal) / perpend;
+        if (!ray.infinite() && distance > ray.length())
+            continue;
+        const glm::vec2 point = origin + distance * dir;
+        return {point, pnormal, distance, true, object};
     }
     return {};
 }

@@ -19,11 +19,6 @@ ray2D ray2D::from_endpoints(const glm::vec2 &start, const glm::vec2 &end)
     return ray2D(start, end - start, glm::length(end - start));
 }
 
-ray2D::hit::operator bool() const
-{
-    return hit;
-}
-
 const glm::vec2 &ray2D::origin() const
 {
     return m_origin;

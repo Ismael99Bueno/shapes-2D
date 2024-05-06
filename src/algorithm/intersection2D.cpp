@@ -196,29 +196,6 @@ bool intersects(const aabb2D &bb, const ray2D &ray)
 
     return tmin >= 0.f && tmin <= ray.length();
 }
-ray2D::hit intersects(const circle &circ, const ray2D &ray)
-{
-    const glm::vec2 &origin = ray.origin();
-    const glm::vec2 &dir = ray.direction();
-    const glm::vec2 &center = circ.gcentroid();
-    const glm::vec2 OC = center - origin;
-    const float R2 = circ.radius() * circ.radius();
-    if (glm::dot(OC, dir) <= 0.f || glm::distance2(center, origin) <= R2)
-        return {};
-    if (!ray.infinite())
-    {
-        const glm::vec2 end = origin + dir * ray.length();
-        const glm::vec2 EC = center - end;
-        if (glm::dot(EC, dir) >= 0.f && glm::distance2(center, end) >= R2)
-            return {};
-    }
-
-    const glm::vec2 &normal = ray.normal();
-    const float pdist = -glm::dot(OC, normal);
-    const glm::vec2 proj = center + pdist * normal;
-    const glm::vec2 point = proj - dir * glm::sqrt(R2 - pdist * pdist);
-    return {point, glm::normalize(point - center), glm::distance(origin, point), true};
-}
 
 mtv_result2D mtv(const circle &c1, const circle &c2)
 {
