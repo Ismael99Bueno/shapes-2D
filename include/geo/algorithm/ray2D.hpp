@@ -14,12 +14,12 @@ class ray2D
         glm::vec2 point;
         glm::vec2 normal;
         float distance;
-        bool hit = false;
+        bool is_hit = false;
         T *object = nullptr;
 
         operator bool() const
         {
-            return hit;
+            return is_hit;
         }
     };
 
