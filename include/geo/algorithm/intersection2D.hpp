@@ -122,7 +122,7 @@ template <std::size_t Capacity>
 kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &poly1, const polygon<Capacity> &poly2,
                                                     const glm::vec2 &mtv)
 {
-    float max_dot = 1.05f * glm::dot(mtv, poly1.vertices.normals[0]);
+    float max_dot = glm::dot(mtv, poly1.vertices.normals[0]);
     std::size_t ref_index = 0;
 
     const polygon<Capacity> *ref_poly = &poly1;
@@ -130,7 +130,7 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
 
     for (std::size_t i = 1; i < poly1.vertices.size(); i++)
     {
-        const float dot = 1.05f * glm::dot(mtv, poly1.vertices.normals[i]);
+        const float dot = glm::dot(mtv, poly1.vertices.normals[i]);
         if (dot > max_dot)
         {
             max_dot = dot;
@@ -140,7 +140,7 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
     bool flipped = false;
     for (std::size_t i = 0; i < poly2.vertices.size(); i++)
     {
-        const float dot = 0.95f * glm::dot(-mtv, poly2.vertices.normals[i]);
+        const float dot = glm::dot(-mtv, poly2.vertices.normals[i]);
         if (dot > max_dot)
         {
             max_dot = dot;
