@@ -72,6 +72,9 @@ gjk_result2D gjk(const shape2D &sh1, const shape2D &sh2)
     KIT_PERF_FUNCTION()
     KIT_ASSERT_WARN(!dynamic_cast<const circle *>(&sh1) || !dynamic_cast<const circle *>(&sh2),
                     "Using gjk algorithm to check if two circles are intersecting is overkill")
+    const float radius = sh1.radius() + sh2.radius();
+    if (glm::distance2(sh1.gcentroid(), sh2.gcentroid()) > radius * radius)
+        return gjk_result2D{false, {}};
 
     gjk_result2D result{false, {}};
     arr3 simplex{result.simplex};
