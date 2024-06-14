@@ -56,6 +56,7 @@ class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
 
     float area() const;
     float inertia() const;
+    float radius() const;
     bool convex() const;
 
     bool updating() const;
@@ -69,6 +70,7 @@ class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
 
     float m_area = 0.f;
     float m_inertia = 0.f;
+    float m_radius = 0.f;
     bool m_convex = true;
 
     virtual void on_shape_transform_update(const glm::mat3 &ltransform, const glm::mat3 &gtransform);

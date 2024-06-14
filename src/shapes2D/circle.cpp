@@ -4,25 +4,23 @@
 
 namespace geo
 {
-circle::circle(const float radius) : m_radius(radius)
+circle::circle(const float radius)
 {
     KIT_ASSERT_WARN(radius >= 0.f, "Creating circle with negative radius: {0}", radius);
+    m_radius = radius;
     m_convex = true;
     update_area_and_inertia();
     update();
 }
-circle::circle(const transform2D &ltransform, const float radius) : shape2D(ltransform), m_radius(radius)
+circle::circle(const transform2D &ltransform, const float radius) : shape2D(ltransform)
 {
     KIT_ASSERT_WARN(radius >= 0.f, "Creating circle with negative radius: {0}", radius);
+    m_radius = radius;
     m_convex = true;
     update_area_and_inertia();
     update();
 }
 
-float circle::radius() const
-{
-    return m_radius;
-}
 void circle::radius(const float radius)
 {
     KIT_ASSERT_WARN(radius >= 0.f, "Setting circle radius to negative value: {0}", radius);

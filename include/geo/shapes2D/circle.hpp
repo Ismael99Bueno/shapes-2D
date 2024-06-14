@@ -10,7 +10,7 @@ class circle final : public shape2D
     circle(float radius = 1.f);
     circle(const transform2D &ltransform, float radius = 1.f);
 
-    float radius() const;
+    using shape2D::radius;
     void radius(float radius);
 
     glm::vec2 support_point(const glm::vec2 &direction) const override;
@@ -26,8 +26,6 @@ class circle final : public shape2D
 #endif
 
   private:
-    float m_radius;
-
     void update_area_and_inertia();
 };
 } // namespace geo

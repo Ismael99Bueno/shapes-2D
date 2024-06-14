@@ -252,6 +252,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
         m_area = compute_area();
         m_inertia = compute_inertia();
         m_convex = compute_convexity();
+        m_radius = compute_radius();
         return current_lcentroid;
     }
 
@@ -349,6 +350,17 @@ template <std::size_t Capacity> class polygon final : public shape2D
                 return false;
 
         return true;
+    }
+    float compute_radius() const
+    {
+        float max_dist = 0.f;
+        for (std::size_t i = 0; i < vertices.size(); i++)
+        {
+            const float dist = glm::length2(vertices.model[i]);
+            if (max_dist < dist)
+                max_dist = dist;
+        }
+        return glm::sqrt(max_dist);
     }
 };
 } // namespace geo

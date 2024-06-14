@@ -51,6 +51,10 @@ float shape2D::inertia() const
 {
     return m_inertia;
 }
+float shape2D::radius() const
+{
+    return m_radius;
+}
 bool shape2D::convex() const
 {
     return m_convex;
