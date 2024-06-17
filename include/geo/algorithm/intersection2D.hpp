@@ -16,12 +16,14 @@ struct gjk_result2D
     std::array<glm::vec2, 3> simplex;
     operator bool() const;
 };
+
 struct mtv_result2D
 {
     bool valid;
     glm::vec2 mtv;
     operator bool() const;
 };
+
 struct contact_feature2D
 {
     enum class type
@@ -29,6 +31,7 @@ struct contact_feature2D
         VERTEX = 0,
         FACE = 1
     };
+
     contact_feature2D() = default;
     contact_feature2D(std::size_t index1, std::size_t index2, type type1, type type2, bool flipped);
 
@@ -37,10 +40,12 @@ struct contact_feature2D
     std::uint8_t type1;
     std::uint8_t type2;
 };
+
 union contact_id2D {
     contact_feature2D feature{};
     std::uint32_t key;
 };
+
 struct contact_point2D
 {
     glm::vec2 point;
@@ -164,11 +169,19 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
         }
     }
 
-    const auto clip_contact = [ref_poly, flipped](const kit::dynarray<contact_point2D, 2> &unclipped,
-                                                  const std::size_t ridx, const glm::vec2 &ref_tangent) {
+    return clipping_contacts(*ref_poly, *inc_poly, ref_index, inc_index, flipped);
+}
+
+template <std::size_t Capacity>
+kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &reference,
+                                                    const polygon<Capacity> &incident, const std::size_t ref_index,
+                                                    const std::size_t inc_index, const bool flipped = false)
+{
+    const auto clip_contact = [reference, flipped](const kit::dynarray<contact_point2D, 2> &unclipped,
+                                                   const std::size_t ridx, const glm::vec2 &ref_tangent) {
         kit::dynarray<contact_point2D, 2> clipped;
 
-        const glm::vec2 &rv = ref_poly->vertices.globals[ridx];
+        const glm::vec2 &rv = reference.vertices.globals[ridx];
         const glm::vec2 &iv1 = unclipped[0].point;
         const glm::vec2 &iv2 = unclipped[1].point;
 
@@ -191,17 +204,18 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
     };
 
     const std::size_t iidx1 = inc_index;
-    const std::size_t iidx2 = (inc_index + 1) % inc_poly->vertices.size();
+    const std::size_t iidx2 = (inc_index + 1) % incident.vertices.size();
 
     const std::size_t ridx1 = ref_index;
-    const std::size_t ridx2 = (ref_index + 1) % ref_poly->vertices.size();
+    const std::size_t ridx2 = (ref_index + 1) % reference.vertices.size();
 
+    const glm::vec2 &ref_normal = reference.vertices.normals[ridx1];
     const glm::vec2 ref_tangent = glm::vec2{-ref_normal.y, ref_normal.x};
 
     const contact_feature2D cf1{ridx1, iidx1, contact_feature2D::type::FACE, contact_feature2D::type::VERTEX, flipped};
     const contact_feature2D cf2{ridx2, iidx2, contact_feature2D::type::FACE, contact_feature2D::type::VERTEX, flipped};
-    const kit::dynarray<contact_point2D, 2> unclipped{{inc_poly->vertices.globals[iidx1], {cf1}, 0.f},
-                                                      {inc_poly->vertices.globals[iidx2], {cf2}, 0.f}};
+    const kit::dynarray<contact_point2D, 2> unclipped{{incident.vertices.globals[iidx1], {cf1}, 0.f},
+                                                      {incident.vertices.globals[iidx2], {cf2}, 0.f}};
 
     kit::dynarray<contact_point2D, 2> clipped = clip_contact(unclipped, ridx1, -ref_tangent);
     if (clipped.size() != 2)
@@ -218,7 +232,7 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
 
     for (auto it = clipped.begin(); it != clipped.end();)
     {
-        const float front_pntr = glm::dot(ref_normal, it->point - ref_poly->vertices.globals[ridx1]);
+        const float front_pntr = glm::dot(ref_normal, it->point - reference.vertices.globals[ridx1]);
         if (front_pntr >= 0.f)
             it = clipped.erase(it);
         else
