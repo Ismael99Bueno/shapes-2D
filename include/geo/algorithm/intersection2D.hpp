@@ -12,15 +12,25 @@ namespace geo
 {
 struct gjk_result2D
 {
-    bool intersect;
-    std::array<glm::vec2, 3> simplex;
+    bool intersects = false;
+    kit::dynarray<glm::vec2, 3> simplex;
     operator bool() const;
 };
 
 struct mtv_result2D
 {
-    bool valid;
-    glm::vec2 mtv;
+    bool valid = false;
+    glm::vec2 mtv{0.f};
+    operator bool() const;
+};
+
+struct sat_result2D
+{
+    bool intersects = false;
+    glm::vec2 mtv{0.f};
+    bool reference_incident_flipped = false;
+    std::size_t reference_index = SIZE_MAX;
+    std::size_t incident_index = SIZE_MAX;
     operator bool() const;
 };
 
@@ -53,17 +63,242 @@ struct contact_point2D
     float penetration;
 };
 
-gjk_result2D gjk(const shape2D &sh1, const shape2D &sh2);
-mtv_result2D epa(const shape2D &sh1, const shape2D &sh2, const std::array<glm::vec2, 3> &simplex,
-                 float threshold = 1.e-3f);
+glm::vec2 triple_cross(const glm::vec2 &v1, const glm::vec2 &v2, const glm::vec2 &v3);
+void gjk_line_case(const kit::dynarray<glm::vec2, 3> &simplex, glm::vec2 &dir);
+bool gjk_triangle_case(kit::dynarray<glm::vec2, 3> &simplex, glm::vec2 &dir);
 
-bool may_intersect(const shape2D &sh1, const shape2D &sh2);
+template <Shape2D S1, Shape2D S2> gjk_result2D gjk(const S1 &sh1, const S2 &sh2)
+{
+    KIT_PERF_FUNCTION()
+    if constexpr (std::is_same_v<S1, circle> && std::is_same_v<S2, circle>)
+    {
+        KIT_WARN("Using gjk algorithm to check if two circles are intersecting is overkill")
+    }
+    if constexpr (std::is_same_v<S1, shape2D> && std::is_same_v<S2, shape2D>)
+    {
+        KIT_ASSERT_WARN(!dynamic_cast<const circle *>(&sh1) || !dynamic_cast<const circle *>(&sh2),
+                        "Using gjk algorithm to check if two circles are intersecting is overkill")
+    }
+
+    gjk_result2D result{};
+
+    glm::vec2 dir = sh2.gcentroid() - sh1.gcentroid();
+    const glm::vec2 supp = sh1.support_point(dir) - sh2.support_point(-dir);
+    result.simplex.push_back(supp);
+    dir = -supp;
+
+    for (;;)
+    {
+        const glm::vec2 A = sh1.support_point(dir) - sh2.support_point(-dir);
+        if (glm::dot(A, dir) <= 0.f)
+            return result;
+
+        result.simplex.push_back(A);
+        if (result.simplex.size() == 2)
+            gjk_line_case(result.simplex, dir);
+        else if (gjk_triangle_case(result.simplex, dir))
+        {
+            result.intersects = true;
+            return result;
+        }
+    }
+}
+
+template <Shape2D S1, Shape2D S2>
+mtv_result2D epa(const S1 &sh1, const S2 &sh2, const kit::dynarray<glm::vec2, 3> &simplex,
+                 const float threshold = 1.e-3f)
+{
+    KIT_ASSERT_ERROR(threshold > 0.f, "EPA Threshold must be greater than 0: {0}", threshold)
+    KIT_PERF_FUNCTION()
+
+    kit::dynarray<glm::vec2, 12> hull{simplex.begin(), simplex.end()};
+
+    float min_dist = FLT_MAX;
+    mtv_result2D result{};
+    for (;;)
+    {
+        std::size_t min_index;
+        for (std::size_t i = 0; i < hull.size(); i++)
+        {
+            const std::size_t j = (i + 1) % hull.size();
+
+            const glm::vec2 &p1 = hull[i];
+            const glm::vec2 &p2 = hull[j];
+
+            const glm::vec2 edge = p2 - p1;
+
+            glm::vec2 normal = glm::normalize(glm::vec2(edge.y, -edge.x));
+            float dist = glm::dot(normal, p1);
+            if (dist < 0.f)
+            {
+                dist *= -1.f;
+                normal *= -1.f;
+            }
+            if (dist < min_dist)
+            {
+                min_dist = dist;
+                min_index = j;
+                result.mtv = normal;
+            }
+        }
+        if (kit::approaches_zero(glm::length2(result.mtv)))
+            return result;
+
+        const glm::vec2 support = sh1.support_point(result.mtv) - sh2.support_point(-result.mtv);
+        const float sup_dist = glm::dot(result.mtv, support);
+        const float diff = std::abs(sup_dist - min_dist);
+        if (diff <= threshold || hull.size() == hull.capacity())
+            break;
+        hull.insert(hull.begin() + min_index, support);
+        min_dist = FLT_MAX;
+    }
+
+    result.mtv *= min_dist;
+    if (kit::approaches_zero(glm::length2(result.mtv)))
+        return result;
+
+    result.valid = true;
+    return result;
+}
+
+template <std::size_t Capacity> glm::vec2 sat_project_polygon(const polygon<Capacity> &poly, const glm::vec2 &axis)
+{
+    float proj = glm::dot(poly.vertices.globals[0], axis);
+    float mm = proj;
+    float mx = proj;
+    for (std::size_t i = 1; i < poly.vertices.size(); i++)
+    {
+        proj = glm::dot(poly.vertices.globals[i], axis);
+        if (proj < mm)
+            mm = proj;
+        if (proj > mx)
+            mx = proj;
+    }
+    return {mm, mx};
+}
+
+glm::vec2 sat_project_circle(const circle &circ, const glm::vec2 &axis);
+
+template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly1, const polygon<Capacity> &poly2)
+{
+    sat_result2D result{};
+
+    std::size_t index1 = SIZE_MAX;
+    float min_overlap = FLT_MAX;
+    for (std::size_t i = 0; i < poly1.vertices.size(); i++)
+    {
+        const glm::vec2 &normal = poly1.vertices.normals[i];
+        const glm::vec2 range1 = sat_project_polygon(poly1, normal);
+        const glm::vec2 range2 = sat_project_polygon(poly2, normal);
+        const float overlap = glm::min(range1.y, range2.y) - glm::max(range1.x, range2.x);
+        if (overlap <= 0.f)
+            return result;
+        if (overlap < min_overlap)
+        {
+            index1 = i;
+            min_overlap = overlap;
+        }
+    }
+
+    std::size_t index2 = SIZE_MAX;
+    bool flipped = false;
+    for (std::size_t i = 0; i < poly2.vertices.size(); i++)
+    {
+        const glm::vec2 &normal = poly2.vertices.normals[i];
+        const glm::vec2 range1 = project_polygon(poly1, normal);
+        const glm::vec2 range2 = project_polygon(poly2, normal);
+        const float overlap = glm::min(range1.y, range2.y) - glm::max(range1.x, range2.x);
+        if (overlap <= 0.f)
+            return result;
+        if (overlap < min_overlap)
+        {
+            index2 = i;
+            min_overlap = overlap;
+            flipped = true;
+        }
+    }
+
+    result.intersects = true;
+    result.reference_index = flipped ? index2 : index1;
+    result.incident_index = flipped ? index1 : index2;
+    result.mtv = min_overlap * (flipped ? -poly2.vertices.normals[index2] : poly1.vertices.normals[index1]);
+    result.reference_incident_flipped = flipped;
+    return result;
+}
+template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly, const circle &circ)
+{
+    sat_result2D result{};
+    const auto closest_point_on_segment = [](const glm::vec2 &p, const glm::vec2 &a, const glm::vec2 &b,
+                                             const glm::vec2 &ab) {
+        const glm::vec2 ap = p - a;
+        const float t = glm::dot(ap, ab) / glm::length2(ab);
+        if (t <= 0.f)
+            return a;
+        if (t >= 1.f)
+            return b;
+        return a + t * ab;
+    };
+
+    glm::vec2 closest_to_center{FLT_MAX};
+    float min_dist = FLT_MAX;
+
+    std::size_t index = SIZE_MAX;
+    float min_overlap = FLT_MAX;
+    for (std::size_t i = 0; i < poly.vertices.size(); i++)
+    {
+        const glm::vec2 &normal = poly.vertices.normals[i];
+        const glm::vec2 range1 = sat_project_polygon(poly, normal);
+        const glm::vec2 range2 = sat_project_circle(circ, normal);
+        const float overlap = glm::min(range1.y, range2.y) - glm::max(range1.x, range2.x);
+        if (overlap <= 0.f)
+            return result;
+        if (overlap < min_overlap)
+        {
+            min_overlap = overlap;
+            index = i;
+        }
+
+        const glm::vec2 closest = closest_point_on_segment(circ.gcentroid(), poly.vertices.globals[i],
+                                                           poly.vertices.globals[i + 1], poly.vertices.edges[i]);
+        const float dist = glm::distance2(circ.gcentroid(), closest);
+        if (dist < min_dist)
+        {
+            min_dist = dist;
+            closest_to_center = closest;
+        }
+    }
+    const glm::vec2 last_axis = glm::normalize(circ.gcentroid() - closest_to_center);
+    const glm::vec2 range1 = sat_project_polygon(poly, last_axis);
+    const glm::vec2 range2 = sat_project_circle(circ, last_axis);
+    const float overlap = glm::min(range1.y, range2.y) - glm::max(range1.x, range2.x);
+    if (overlap <= 0.f)
+        return result;
+
+    result.intersects = true;
+    if (overlap < min_overlap)
+    {
+        result.incident_index = index;
+        result.mtv = overlap * last_axis;
+        result.reference_incident_flipped = true;
+        return result;
+    }
+    result.reference_index = index;
+    result.mtv = min_overlap * poly.vertices.normals[index];
+    return result;
+}
+template <std::size_t Capacity> sat_result2D sat(const circle &circ, const polygon<Capacity> &poly)
+{
+    sat_result2D result = sat(poly, circ);
+    result.reference_incident_flipped = !result.reference_incident_flipped;
+    result.mtv = -result.mtv;
+    return result;
+}
 
 bool intersects(const aabb2D &bb1, const aabb2D &bb2);
 bool intersects(const aabb2D &bb, const glm::vec2 &point);
-bool intersects(const circle &c1, const circle &c2);
 bool intersects(const aabb2D &bb, const ray2D &ray);
 
+bool intersects(const circle &c1, const circle &c2);
 template <typename T> ray2D::hit<T> intersects(const circle &circ, const ray2D &ray, T *object = nullptr)
 {
     const glm::vec2 &origin = ray.origin();
@@ -177,6 +412,9 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &ref
                                                     const polygon<Capacity> &incident, const std::size_t ref_index,
                                                     const std::size_t inc_index, const bool flipped = false)
 {
+    KIT_ASSERT_ERROR(ref_index < reference.vertices.size(), "Reference index out of bounds")
+    KIT_ASSERT_ERROR(inc_index < incident.vertices.size(), "Incident index out of bounds")
+
     const auto clip_contact = [reference, flipped](const kit::dynarray<contact_point2D, 2> &unclipped,
                                                    const std::size_t ridx, const glm::vec2 &ref_tangent) {
         kit::dynarray<contact_point2D, 2> clipped;
@@ -243,4 +481,15 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &ref
     }
     return clipped;
 }
+
+template <std::size_t Capacity>
+kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &reference,
+                                                    const polygon<Capacity> &incident, const sat_result2D &sat_result)
+{
+    KIT_ASSERT_ERROR(sat_result.intersects, "SAT Result must report intersection")
+    KIT_ASSERT_ERROR(sat_result.reference_index != SIZE_MAX && sat_result.incident_index != SIZE_MAX,
+                     "SAT Result indices must both be valid. If one of them is SIZE_MAX, this SAT result may "
+                     "correspond to a circle-polygon intersection")
+}
+
 } // namespace geo

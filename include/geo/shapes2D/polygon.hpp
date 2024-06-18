@@ -363,4 +363,8 @@ template <std::size_t Capacity> class polygon final : public shape2D
         return glm::sqrt(max_dist);
     }
 };
+
+template <typename T>
+concept Polygon = Shape2D<T> && std::same_as<typename T::vertex_container, typename polygon<3>::vertex_container>;
+
 } // namespace geo

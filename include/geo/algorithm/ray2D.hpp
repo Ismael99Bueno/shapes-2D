@@ -32,8 +32,11 @@ class ray2D
     const glm::vec2 &origin() const;
     const glm::vec2 &direction() const;
     const glm::vec2 &normal() const;
+
     float length() const;
     bool infinite() const;
+
+    void resize(float length);
 
   private:
     glm::vec2 m_origin;

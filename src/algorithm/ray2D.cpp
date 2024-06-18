@@ -31,6 +31,7 @@ const glm::vec2 &ray2D::normal() const
 {
     return m_normal;
 }
+
 float ray2D::length() const
 {
     return m_length;
@@ -39,4 +40,16 @@ bool ray2D::infinite() const
 {
     return m_infinte;
 }
+
+void ray2D::resize(float length)
+{
+    if (length == FLT_MAX)
+    {
+        m_infinte = true;
+        return;
+    }
+    m_length = length;
+    m_infinte = false;
+}
+
 } // namespace geo

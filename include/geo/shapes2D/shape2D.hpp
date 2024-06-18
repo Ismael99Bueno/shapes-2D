@@ -6,9 +6,15 @@
 #include "geo/algorithm/transform2D.hpp"
 
 #include "kit/serialization/yaml/serializer.hpp"
+#include "kit/utility/type_constraints.hpp"
 
 namespace geo
 {
+class shape2D;
+
+template <typename T>
+concept Shape2D = kit::DerivedFrom<T, shape2D>;
+
 class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
 {
   public:
