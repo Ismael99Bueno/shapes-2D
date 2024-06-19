@@ -205,8 +205,8 @@ template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly1,
     for (std::size_t i = 0; i < poly2.vertices.size(); i++)
     {
         const glm::vec2 &normal = poly2.vertices.normals[i];
-        const glm::vec2 range1 = project_polygon(poly1, normal);
-        const glm::vec2 range2 = project_polygon(poly2, normal);
+        const glm::vec2 range1 = sat_project_polygon(poly1, normal);
+        const glm::vec2 range2 = sat_project_polygon(poly2, normal);
         const float overlap = glm::min(range1.y, range2.y) - glm::max(range1.x, range2.x);
         if (overlap <= 0.f)
             return result;
@@ -380,7 +380,7 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
     bool flipped = false;
     for (std::size_t i = 0; i < poly2.vertices.size(); i++)
     {
-        const float dot = glm::dot(-mtv, poly2.vertices.normals[i]);
+        const float dot = -glm::dot(mtv, poly2.vertices.normals[i]);
         if (dot > max_dot)
         {
             max_dot = dot;
