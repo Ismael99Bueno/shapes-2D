@@ -51,7 +51,7 @@ bool gjk_triangle_case(kit::dynarray<glm::vec2, 3> &simplex, glm::vec2 &dir)
     return true;
 }
 
-glm::vec2 sat_project_circle(const glm::vec2 &axis, const circle &circ)
+glm::vec2 sat_project_circle(const circle &circ, const glm::vec2 &axis)
 {
     const glm::vec2 &center = circ.gcentroid();
     const float proj = glm::dot(center, axis);
