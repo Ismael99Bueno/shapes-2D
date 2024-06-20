@@ -53,6 +53,7 @@ bool gjk_triangle_case(kit::dynarray<glm::vec2, 3> &simplex, glm::vec2 &dir)
 
 glm::vec2 sat_project_circle(const circle &circ, const glm::vec2 &axis)
 {
+    KIT_PERF_FUNCTION()
     const glm::vec2 &center = circ.gcentroid();
     const float proj = glm::dot(center, axis);
     return {proj - circ.radius(), proj + circ.radius()};

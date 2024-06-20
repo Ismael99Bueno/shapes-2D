@@ -108,8 +108,8 @@ template <Shape2D S1, Shape2D S2>
 mtv_result2D epa(const S1 &sh1, const S2 &sh2, const kit::dynarray<glm::vec2, 3> &simplex,
                  const float threshold = 1.e-3f)
 {
-    KIT_ASSERT_ERROR(threshold > 0.f, "EPA Threshold must be greater than 0: {0}", threshold)
     KIT_PERF_FUNCTION()
+    KIT_ASSERT_ERROR(threshold > 0.f, "EPA Threshold must be greater than 0: {0}", threshold)
 
     kit::dynarray<glm::vec2, 12> hull{simplex.begin(), simplex.end()};
 
@@ -163,6 +163,7 @@ mtv_result2D epa(const S1 &sh1, const S2 &sh2, const kit::dynarray<glm::vec2, 3>
 
 template <std::size_t Capacity> glm::vec2 sat_project_polygon(const polygon<Capacity> &poly, const glm::vec2 &axis)
 {
+    KIT_PERF_FUNCTION()
     float proj = glm::dot(poly.vertices.globals[0], axis);
     float mm = proj;
     float mx = proj;
@@ -181,6 +182,7 @@ glm::vec2 sat_project_circle(const circle &circ, const glm::vec2 &axis);
 
 template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly1, const polygon<Capacity> &poly2)
 {
+    KIT_PERF_FUNCTION()
     sat_result2D result{};
 
     std::size_t index1 = SIZE_MAX;
@@ -227,6 +229,7 @@ template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly1,
 }
 template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly, const circle &circ)
 {
+    KIT_PERF_FUNCTION()
     sat_result2D result{};
     const auto closest_point_on_segment = [](const glm::vec2 &p, const glm::vec2 &a, const glm::vec2 &b,
                                              const glm::vec2 &ab) {
@@ -362,6 +365,7 @@ template <std::size_t Capacity>
 kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &poly1, const polygon<Capacity> &poly2,
                                                     const glm::vec2 &mtv)
 {
+    KIT_PERF_SCOPE("clipping_contacts_full")
     float max_dot = glm::dot(mtv, poly1.vertices.normals[0]);
     std::size_t ref_index = 0;
 
@@ -412,6 +416,7 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &ref
                                                     const polygon<Capacity> &incident, const std::size_t ref_index,
                                                     const std::size_t inc_index, const bool flipped = false)
 {
+    KIT_PERF_SCOPE("clipping_contacts_partial")
     KIT_ASSERT_ERROR(ref_index < reference.vertices.size(), "Reference index out of bounds")
     KIT_ASSERT_ERROR(inc_index < incident.vertices.size(), "Incident index out of bounds")
 
@@ -490,6 +495,8 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &ref
     KIT_ASSERT_ERROR(sat_result.reference_index != SIZE_MAX && sat_result.incident_index != SIZE_MAX,
                      "SAT Result indices must both be valid. If one of them is SIZE_MAX, this SAT result may "
                      "correspond to a circle-polygon intersection")
+    return clipping_contacts(reference, incident, sat_result.reference_index, sat_result.incident_index,
+                             sat_result.reference_incident_flipped);
 }
 
 } // namespace geo
