@@ -28,9 +28,6 @@ struct sat_result2D
 {
     bool intersects = false;
     glm::vec2 mtv{0.f};
-    bool reference_incident_flipped = false;
-    std::size_t reference_index = SIZE_MAX;
-    std::size_t incident_index = SIZE_MAX;
     operator bool() const;
 };
 
@@ -185,8 +182,10 @@ template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly1,
     KIT_PERF_FUNCTION()
     sat_result2D result{};
 
+    const glm::vec2 mtv_dir = poly2.gcentroid() - poly1.gcentroid();
+
     std::size_t index1 = SIZE_MAX;
-    float min_overlap = FLT_MAX;
+    float min_overlap1 = FLT_MAX;
     for (std::size_t i = 0; i < poly1.vertices.size(); i++)
     {
         const glm::vec2 &normal = poly1.vertices.normals[i];
@@ -195,15 +194,15 @@ template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly1,
         const float overlap = glm::min(range1.y, range2.y) - glm::max(range1.x, range2.x);
         if (overlap <= 0.f)
             return result;
-        if (overlap < min_overlap)
+        if (overlap < min_overlap1)
         {
             index1 = i;
-            min_overlap = overlap;
+            min_overlap1 = overlap;
         }
     }
 
     std::size_t index2 = SIZE_MAX;
-    bool flipped = false;
+    float min_overlap2 = FLT_MAX;
     for (std::size_t i = 0; i < poly2.vertices.size(); i++)
     {
         const glm::vec2 &normal = poly2.vertices.normals[i];
@@ -212,19 +211,19 @@ template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly1,
         const float overlap = glm::min(range1.y, range2.y) - glm::max(range1.x, range2.x);
         if (overlap <= 0.f)
             return result;
-        if (overlap < min_overlap)
+        if (overlap < min_overlap2)
         {
             index2 = i;
-            min_overlap = overlap;
-            flipped = true;
+            min_overlap2 = overlap;
         }
     }
-
     result.intersects = true;
-    result.reference_index = flipped ? index2 : index1;
-    result.incident_index = flipped ? index1 : index2;
-    result.mtv = min_overlap * (flipped ? -poly2.vertices.normals[index2] : poly1.vertices.normals[index1]);
-    result.reference_incident_flipped = flipped;
+
+    const bool flipped = min_overlap1 > min_overlap2;
+    const float min_overlap = flipped ? min_overlap2 : min_overlap1;
+    result.mtv = min_overlap * (flipped ? poly2.vertices.normals[index2] : poly1.vertices.normals[index1]);
+    if (glm::dot(result.mtv, mtv_dir) < 0.f)
+        result.mtv = -result.mtv;
     return result;
 }
 template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly, const circle &circ)
@@ -280,19 +279,19 @@ template <std::size_t Capacity> sat_result2D sat(const polygon<Capacity> &poly, 
     result.intersects = true;
     if (overlap < min_overlap)
     {
-        result.incident_index = index;
         result.mtv = overlap * last_axis;
-        result.reference_incident_flipped = true;
         return result;
     }
-    result.reference_index = index;
     result.mtv = min_overlap * poly.vertices.normals[index];
+    if (glm::dot(result.mtv, last_axis) < 0.f)
+        result.mtv = -result.mtv;
     return result;
 }
 template <std::size_t Capacity> sat_result2D sat(const circle &circ, const polygon<Capacity> &poly)
 {
     sat_result2D result = sat(poly, circ);
-    result.reference_incident_flipped = !result.reference_incident_flipped;
+    if (!result)
+        return result;
     result.mtv = -result.mtv;
     return result;
 }
@@ -366,49 +365,34 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &pol
                                                     const glm::vec2 &mtv)
 {
     KIT_PERF_SCOPE("clipping_contacts_full")
-    float max_dot = glm::dot(mtv, poly1.vertices.normals[0]);
-    std::size_t ref_index = 0;
-
-    const polygon<Capacity> *ref_poly = &poly1;
-    const polygon<Capacity> *inc_poly = &poly2;
+    float max_dot1 = glm::dot(mtv, poly1.vertices.normals[0]);
+    std::size_t index1 = 0;
 
     for (std::size_t i = 1; i < poly1.vertices.size(); i++)
     {
         const float dot = glm::dot(mtv, poly1.vertices.normals[i]);
-        if (dot > max_dot)
+        if (dot > max_dot1)
         {
-            max_dot = dot;
-            ref_index = i;
+            max_dot1 = dot;
+            index1 = i;
         }
     }
-    bool flipped = false;
-    for (std::size_t i = 0; i < poly2.vertices.size(); i++)
+
+    float max_dot2 = -glm::dot(mtv, poly2.vertices.normals[0]);
+    std::size_t index2 = 0;
+    for (std::size_t i = 1; i < poly2.vertices.size(); i++)
     {
         const float dot = -glm::dot(mtv, poly2.vertices.normals[i]);
-        if (dot > max_dot)
+        if (dot > max_dot2)
         {
-            max_dot = dot;
-            ref_index = i;
-            ref_poly = &poly2;
-            inc_poly = &poly1;
-            flipped = true;
+            max_dot2 = dot;
+            index2 = i;
         }
     }
 
-    const glm::vec2 &ref_normal = ref_poly->vertices.normals[ref_index];
-    float min_dot = glm::dot(ref_normal, inc_poly->vertices.normals[0]);
-    std::size_t inc_index = 0;
-    for (std::size_t i = 1; i < inc_poly->vertices.size(); i++)
-    {
-        const float dot = glm::dot(ref_normal, inc_poly->vertices.normals[i]);
-        if (dot < min_dot)
-        {
-            min_dot = dot;
-            inc_index = i;
-        }
-    }
-
-    return clipping_contacts(*ref_poly, *inc_poly, ref_index, inc_index, flipped);
+    const bool flipped = max_dot1 < max_dot2;
+    return clipping_contacts(flipped ? poly2 : poly1, flipped ? poly1 : poly2, flipped ? index2 : index1,
+                             flipped ? index1 : index2, flipped);
 }
 
 template <std::size_t Capacity>
@@ -420,8 +404,8 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &ref
     KIT_ASSERT_ERROR(ref_index < reference.vertices.size(), "Reference index out of bounds")
     KIT_ASSERT_ERROR(inc_index < incident.vertices.size(), "Incident index out of bounds")
 
-    const auto clip_contact = [reference, flipped](const kit::dynarray<contact_point2D, 2> &unclipped,
-                                                   const std::size_t ridx, const glm::vec2 &ref_tangent) {
+    const auto clip_contact = [&reference, flipped](const kit::dynarray<contact_point2D, 2> &unclipped,
+                                                    const std::size_t ridx, const glm::vec2 &ref_tangent) {
         kit::dynarray<contact_point2D, 2> clipped;
 
         const glm::vec2 &rv = reference.vertices.globals[ridx];
@@ -485,18 +469,6 @@ kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &ref
         }
     }
     return clipped;
-}
-
-template <std::size_t Capacity>
-kit::dynarray<contact_point2D, 2> clipping_contacts(const polygon<Capacity> &reference,
-                                                    const polygon<Capacity> &incident, const sat_result2D &sat_result)
-{
-    KIT_ASSERT_ERROR(sat_result.intersects, "SAT Result must report intersection")
-    KIT_ASSERT_ERROR(sat_result.reference_index != SIZE_MAX && sat_result.incident_index != SIZE_MAX,
-                     "SAT Result indices must both be valid. If one of them is SIZE_MAX, this SAT result may "
-                     "correspond to a circle-polygon intersection")
-    return clipping_contacts(reference, incident, sat_result.reference_index, sat_result.incident_index,
-                             sat_result.reference_incident_flipped);
 }
 
 } // namespace geo
