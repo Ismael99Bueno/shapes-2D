@@ -33,6 +33,12 @@ class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
     void parent(const transform2D *parent);
 
     const aabb2D &bounding_box() const;
+    bool bounding_box_recently_updated() const;
+
+    void enlarge_bounding_box(const glm::vec2 &enlarge_vector);
+    void enlarge_bounding_box(float buffer);
+
+    virtual bool bound_if_needed() = 0;
     virtual void bound() = 0;
 
     virtual glm::vec2 closest_direction_from(const glm::vec2 &p) const = 0;
@@ -78,6 +84,7 @@ class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
     float m_inertia = 0.f;
     float m_radius = 0.f;
     bool m_convex = true;
+    bool m_bbox_recently_updated = false;
 
     virtual void on_shape_transform_update(const glm::mat3 &ltransform, const glm::mat3 &gtransform);
 

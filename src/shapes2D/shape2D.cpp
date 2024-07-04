@@ -92,7 +92,30 @@ void shape2D::update()
     else
         on_shape_transform_update(ltransform, ltransform);
 
-    bound();
+    m_bbox_recently_updated = bound_if_needed();
+}
+
+bool shape2D::bounding_box_recently_updated() const
+{
+    return m_bbox_recently_updated;
+}
+
+void shape2D::enlarge_bounding_box(const glm::vec2 &enlarge_vector)
+{
+    if (enlarge_vector.x > 0.f)
+        m_aabb.max.x += enlarge_vector.x;
+    else
+        m_aabb.min.x += enlarge_vector.x;
+    if (enlarge_vector.y > 0.f)
+        m_aabb.max.y += enlarge_vector.y;
+    else
+        m_aabb.min.y += enlarge_vector.y;
+}
+void shape2D::enlarge_bounding_box(const float buffer)
+{
+    const glm::vec2 buffer_vec(buffer);
+    m_aabb.max += buffer_vec;
+    m_aabb.min -= buffer_vec;
 }
 
 void shape2D::on_shape_transform_update(const glm::mat3 &ltransform, const glm::mat3 &gtransform)

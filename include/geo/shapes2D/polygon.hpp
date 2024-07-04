@@ -140,10 +140,30 @@ template <std::size_t Capacity> class polygon final : public shape2D
         return closest;
     }
 
+    bool bound_if_needed() override
+    {
+        glm::vec2 mm{FLT_MAX};
+        glm::vec2 mx{-FLT_MAX};
+        for (std::size_t i = 0; i < vertices.size(); i++)
+        {
+            const glm::vec2 &v = vertices.globals[i];
+            if (mm.x > v.x)
+                mm.x = v.x;
+            if (mm.y > v.y)
+                mm.y = v.y;
+            if (mx.x < v.x)
+                mx.x = v.x;
+            if (mx.y < v.y)
+                mx.y = v.y;
+        }
+        const bool updated = m_aabb.min.x > mm.x || m_aabb.min.y > mm.y || m_aabb.max.x < mx.x || m_aabb.max.y < mx.y;
+        if (updated)
+            m_aabb = aabb2D{mm, mx};
+        return updated;
+    }
+
     void bound() override
     {
-        m_aabb.min = glm::vec2(FLT_MAX);
-        m_aabb.max = -glm::vec2(FLT_MAX);
         for (std::size_t i = 0; i < vertices.size(); i++)
         {
             const glm::vec2 &v = vertices.globals[i];

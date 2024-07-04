@@ -45,6 +45,16 @@ void circle::update_area_and_inertia()
     m_inertia = 0.5f * r2;
 }
 
+bool circle::bound_if_needed()
+{
+    const glm::vec2 mm = m_gcentroid - m_radius;
+    const glm::vec2 mx = m_gcentroid + m_radius;
+    const bool updated = m_aabb.min.x > mm.x || m_aabb.min.y > mm.y || m_aabb.max.x < mx.x || m_aabb.max.y < mx.y;
+    if (updated)
+        m_aabb = aabb2D(mm, mx);
+    return updated;
+}
+
 void circle::bound()
 {
     m_aabb.min = m_gcentroid - m_radius;

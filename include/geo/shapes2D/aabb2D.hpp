@@ -11,6 +11,7 @@ struct aabb2D
     aabb2D(const glm::vec2 &min, const glm::vec2 &max);
 
     glm::vec2 dimension() const;
+    bool contains(const aabb2D &aabb) const;
 
     glm::vec2 min;
     glm::vec2 max;

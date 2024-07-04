@@ -16,6 +16,10 @@ glm::vec2 aabb2D::dimension() const
 {
     return max - min;
 }
+bool aabb2D::contains(const aabb2D &aabb) const
+{
+    return min.x <= aabb.min.x && min.y <= aabb.min.y && max.x >= aabb.max.x && max.y >= aabb.max.y;
+}
 
 aabb2D &aabb2D::operator+=(const aabb2D &bb)
 {

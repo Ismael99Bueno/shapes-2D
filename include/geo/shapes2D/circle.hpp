@@ -16,6 +16,7 @@ class circle final : public shape2D
     glm::vec2 support_point(const glm::vec2 &direction) const override;
     bool contains_point(const glm::vec2 &p) const override;
 
+    bool bound_if_needed() override;
     void bound() override;
 
     glm::vec2 closest_direction_from(const glm::vec2 &p) const override;
