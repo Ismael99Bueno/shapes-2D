@@ -142,21 +142,9 @@ template <std::size_t Capacity> class polygon final : public shape2D
 
     bool bound_if_needed() override
     {
-        glm::vec2 mm{FLT_MAX};
-        glm::vec2 mx{-FLT_MAX};
-        for (std::size_t i = 0; i < vertices.size(); i++)
-        {
-            const glm::vec2 &v = vertices.globals[i];
-            if (mm.x > v.x)
-                mm.x = v.x;
-            if (mm.y > v.y)
-                mm.y = v.y;
-            if (mx.x < v.x)
-                mx.x = v.x;
-            if (mx.y < v.y)
-                mx.y = v.y;
-        }
-        const bool updated = m_aabb.min.x > mm.x || m_aabb.min.y > mm.y || m_aabb.max.x < mx.x || m_aabb.max.y < mx.y;
+        const auto [mm, mx] = min_max_vertices();
+        const geo::aabb2D aabb{mm, mx};
+        const bool updated = !m_aabb.contains(aabb);
         if (updated)
             m_aabb = aabb2D{mm, mx};
         return updated;
@@ -164,18 +152,8 @@ template <std::size_t Capacity> class polygon final : public shape2D
 
     void bound() override
     {
-        for (std::size_t i = 0; i < vertices.size(); i++)
-        {
-            const glm::vec2 &v = vertices.globals[i];
-            if (m_aabb.min.x > v.x)
-                m_aabb.min.x = v.x;
-            if (m_aabb.min.y > v.y)
-                m_aabb.min.y = v.y;
-            if (m_aabb.max.x < v.x)
-                m_aabb.max.x = v.x;
-            if (m_aabb.max.y < v.y)
-                m_aabb.max.y = v.y;
-        }
+        const auto [mm, mx] = min_max_vertices();
+        m_aabb = aabb2D{mm, mx};
     }
 
     static kit::dynarray<glm::vec2, 4> square(const float size)
@@ -220,6 +198,25 @@ template <std::size_t Capacity> class polygon final : public shape2D
 #endif
 
   private:
+    std::pair<glm::vec2, glm::vec2> min_max_vertices() const
+    {
+        glm::vec2 min = vertices.globals[0];
+        glm::vec2 max = vertices.globals[0];
+        for (std::size_t i = 1; i < vertices.size(); i++)
+        {
+            const glm::vec2 &v = vertices.globals[i];
+            if (min.x > v.x)
+                min.x = v.x;
+            if (min.y > v.y)
+                min.y = v.y;
+            if (max.x < v.x)
+                max.x = v.x;
+            if (max.y < v.y)
+                max.y = v.y;
+        }
+        return {min, max};
+    }
+
     void on_shape_transform_update(const glm::mat3 &ltransform, const glm::mat3 &gtransform) override
     {
         shape2D::on_shape_transform_update(ltransform, gtransform);

@@ -47,18 +47,16 @@ void circle::update_area_and_inertia()
 
 bool circle::bound_if_needed()
 {
-    const glm::vec2 mm = m_gcentroid - m_radius;
-    const glm::vec2 mx = m_gcentroid + m_radius;
-    const bool updated = m_aabb.min.x > mm.x || m_aabb.min.y > mm.y || m_aabb.max.x < mx.x || m_aabb.max.y < mx.y;
+    const geo::aabb2D aabb{m_gcentroid - m_radius, m_gcentroid + m_radius};
+    const bool updated = !m_aabb.contains(aabb);
     if (updated)
-        m_aabb = aabb2D(mm, mx);
+        m_aabb = aabb;
     return updated;
 }
 
 void circle::bound()
 {
-    m_aabb.min = m_gcentroid - m_radius;
-    m_aabb.max = m_gcentroid + m_radius;
+    m_aabb = aabb2D(m_gcentroid - m_radius, m_gcentroid + m_radius);
 }
 
 glm::vec2 circle::closest_direction_from(const glm::vec2 &p) const
