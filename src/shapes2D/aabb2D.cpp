@@ -20,6 +20,11 @@ bool aabb2D::contains(const aabb2D &aabb) const
 {
     return min.x <= aabb.min.x && min.y <= aabb.min.y && max.x >= aabb.max.x && max.y >= aabb.max.y;
 }
+float aabb2D::area() const
+{
+    glm::vec2 dim = dimension();
+    return dim.x * dim.y;
+}
 
 aabb2D &aabb2D::operator+=(const aabb2D &bb)
 {

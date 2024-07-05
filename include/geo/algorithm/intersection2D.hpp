@@ -321,7 +321,11 @@ template <typename T> ray2D::hit<T> intersects(const circle &circ, const ray2D &
     const glm::vec2 &normal = ray.normal();
     const float pdist = -glm::dot(OC, normal);
     const glm::vec2 proj = center + pdist * normal;
-    const glm::vec2 point = proj - dir * glm::sqrt(R2 - pdist * pdist);
+
+    const float dst = R2 - pdist * pdist;
+    if (dst < 0.f)
+        return {};
+    const glm::vec2 point = proj - dir * glm::sqrt(dst);
     return {point, glm::normalize(point - center), glm::distance(origin, point), true, object};
 }
 template <typename T, std::size_t Capacity>
