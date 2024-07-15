@@ -53,7 +53,6 @@ bool gjk_triangle_case(kit::dynarray<glm::vec2, 3> &simplex, glm::vec2 &dir)
 
 glm::vec2 sat_project_circle(const circle &circ, const glm::vec2 &axis)
 {
-    KIT_PERF_FUNCTION()
     const glm::vec2 &center = circ.gcentroid();
     const float proj = glm::dot(center, axis);
     return {proj - circ.radius(), proj + circ.radius()};
@@ -114,7 +113,6 @@ mtv_result2D mtv(const circle &c1, const circle &c2)
 
 contact_point2D mtv_support_contact_point(const shape2D &sh1, const shape2D &sh2, const glm::vec2 &mtv)
 {
-    KIT_PERF_FUNCTION()
     const glm::vec2 sup1 = sh1.support_point(mtv), sup2 = sh2.support_point(-mtv);
     const float d1 = glm::length2(sh2.closest_direction_from(sup1 - mtv)),
                 d2 = glm::length2(sh1.closest_direction_from(sup2 + mtv));
