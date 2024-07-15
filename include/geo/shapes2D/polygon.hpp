@@ -140,20 +140,23 @@ template <std::size_t Capacity> class polygon final : public shape2D
         return closest;
     }
 
-    bool bound_if_needed() override
+    aabb2D create_bounding_box() const override
     {
-        const auto [mm, mx] = min_max_vertices();
-        const geo::aabb2D aabb{mm, mx};
-        const bool updated = !m_aabb.contains(aabb);
-        if (updated)
-            m_aabb = aabb2D{mm, mx};
-        return updated;
-    }
-
-    void bound() override
-    {
-        const auto [mm, mx] = min_max_vertices();
-        m_aabb = aabb2D{mm, mx};
+        glm::vec2 min = vertices.globals[0];
+        glm::vec2 max = vertices.globals[0];
+        for (std::size_t i = 1; i < vertices.size(); i++)
+        {
+            const glm::vec2 &v = vertices.globals[i];
+            if (min.x > v.x)
+                min.x = v.x;
+            if (min.y > v.y)
+                min.y = v.y;
+            if (max.x < v.x)
+                max.x = v.x;
+            if (max.y < v.y)
+                max.y = v.y;
+        }
+        return aabb2D(min, max);
     }
 
     static kit::dynarray<glm::vec2, 4> square(const float size)
@@ -198,25 +201,6 @@ template <std::size_t Capacity> class polygon final : public shape2D
 #endif
 
   private:
-    std::pair<glm::vec2, glm::vec2> min_max_vertices() const
-    {
-        glm::vec2 min = vertices.globals[0];
-        glm::vec2 max = vertices.globals[0];
-        for (std::size_t i = 1; i < vertices.size(); i++)
-        {
-            const glm::vec2 &v = vertices.globals[i];
-            if (min.x > v.x)
-                min.x = v.x;
-            if (min.y > v.y)
-                min.y = v.y;
-            if (max.x < v.x)
-                max.x = v.x;
-            if (max.y < v.y)
-                max.y = v.y;
-        }
-        return {min, max};
-    }
-
     void on_shape_transform_update(const glm::mat3 &ltransform, const glm::mat3 &gtransform) override
     {
         shape2D::on_shape_transform_update(ltransform, gtransform);

@@ -45,18 +45,9 @@ void circle::update_area_and_inertia()
     m_inertia = 0.5f * r2;
 }
 
-bool circle::bound_if_needed()
+aabb2D circle::create_bounding_box() const
 {
-    const geo::aabb2D aabb{m_gcentroid - m_radius, m_gcentroid + m_radius};
-    const bool updated = !m_aabb.contains(aabb);
-    if (updated)
-        m_aabb = aabb;
-    return updated;
-}
-
-void circle::bound()
-{
-    m_aabb = aabb2D(m_gcentroid - m_radius, m_gcentroid + m_radius);
+    return aabb2D(m_gcentroid - m_radius, m_gcentroid + m_radius);
 }
 
 glm::vec2 circle::closest_direction_from(const glm::vec2 &p) const

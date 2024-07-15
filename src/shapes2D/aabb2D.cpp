@@ -26,6 +26,24 @@ float aabb2D::area() const
     return dim.x * dim.y;
 }
 
+void aabb2D::enlarge(const glm::vec2 &enlarge_vector)
+{
+    if (enlarge_vector.x > 0.f)
+        max.x += enlarge_vector.x;
+    else
+        min.x += enlarge_vector.x;
+    if (enlarge_vector.y > 0.f)
+        max.y += enlarge_vector.y;
+    else
+        min.y += enlarge_vector.y;
+}
+
+void aabb2D::enlarge(const float buffer)
+{
+    min -= buffer;
+    max += buffer;
+}
+
 aabb2D &aabb2D::operator+=(const aabb2D &bb)
 {
     *this = *this + bb;

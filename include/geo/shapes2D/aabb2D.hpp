@@ -14,6 +14,9 @@ struct aabb2D
     bool contains(const aabb2D &aabb) const;
     float area() const;
 
+    void enlarge(const glm::vec2 &enlarge_vector);
+    void enlarge(float buffer);
+
     glm::vec2 min;
     glm::vec2 max;
 
