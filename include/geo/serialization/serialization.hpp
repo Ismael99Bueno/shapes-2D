@@ -25,7 +25,7 @@ template <> struct kit::yaml::codec<geo::aabb2D>
     }
     static bool decode(const YAML::Node &node, geo::aabb2D &aabb)
     {
-        if (!node.IsMap() || node.size() != 2)
+        if (!node.IsMap() || node.size() < 2)
             return false;
 
         aabb = {node["Min"].as<glm::vec2>(), node["Max"].as<glm::vec2>()};
@@ -45,7 +45,7 @@ template <> struct kit::yaml::codec<geo::circle>
     }
     static bool decode(const YAML::Node &node, geo::circle &circ)
     {
-        if (!node.IsMap() || node.size() != 2)
+        if (!node.IsMap() || node.size() < 2)
             return false;
         circ = {geo::transform2D{node["Transform"].as<kit::transform2D<float>>()}, node["Radius"].as<float>()};
         return true;
@@ -68,7 +68,7 @@ template <std::size_t Capacity> struct kit::yaml::codec<geo::polygon<Capacity>>
     }
     static bool decode(const YAML::Node &node, geo::polygon<Capacity> &poly)
     {
-        if (!node.IsMap() || node.size() != 2)
+        if (!node.IsMap() || node.size() < 2)
             return false;
         YAML::Node node_v = node["Vertices"];
 
