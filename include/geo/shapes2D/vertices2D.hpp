@@ -4,7 +4,7 @@
 #include "kit/utility/type_constraints.hpp"
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
-// #define GLM_FORCE_AVX2
+#define GLM_FORCE_INTRINSICS
 #include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/geometric.hpp>
