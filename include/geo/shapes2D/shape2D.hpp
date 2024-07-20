@@ -9,10 +9,10 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include "geo/shapes2D/aabb2D.hpp"
-#include "geo/algorithm/transform2D.hpp"
 
 #include "kit/serialization/yaml/serializer.hpp"
 #include "kit/utility/type_constraints.hpp"
+#include "kit/utility/transform.hpp"
 
 namespace geo
 {
@@ -21,6 +21,7 @@ class shape2D;
 template <typename T>
 concept Shape2D = kit::DerivedFrom<T, shape2D>;
 
+using transform2D = kit::transform2D<float>;
 class shape2D : public kit::yaml::serializable, public kit::yaml::deserializable
 {
   public:

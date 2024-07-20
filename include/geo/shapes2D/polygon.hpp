@@ -206,7 +206,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
         shape2D::on_shape_transform_update(ltransform, gtransform);
         for (std::size_t i = 0; i < vertices.size(); i++)
             vertices.locals(i) = ltransform * glm::vec3(vertices.model[i], 1.f);
-        if (m_ltransform.parent())
+        if (m_ltransform.parent)
             for (std::size_t i = 0; i < vertices.size(); i++)
                 vertices.globals(i) = gtransform * glm::vec3(vertices.model[i], 1.f);
         else
