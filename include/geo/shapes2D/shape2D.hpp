@@ -1,7 +1,13 @@
 #pragma once
 
-#include <glm/vec2.hpp>
-#include <glm/mat2x2.hpp>
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+// #define GLM_FORCE_AVX2
+#include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
+#include <glm/geometric.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include "geo/shapes2D/aabb2D.hpp"
 #include "geo/algorithm/transform2D.hpp"
 
