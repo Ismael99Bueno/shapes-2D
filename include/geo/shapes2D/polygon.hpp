@@ -30,7 +30,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
     polygon(It it1, It it2)
         : vertices{.locals{it1, it2}, .globals{it1, it2}, .edges{it1, it2}, .normals{it1, it2}, .model{it1, it2}}
     {
-        m_ltransform.position(initialize_properties_and_vertices());
+        m_ltransform.position = initialize_properties_and_vertices();
         update();
     }
 
@@ -43,7 +43,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
                    .normals{verts.size()},
                    .model{verts.size()}}
     {
-        m_ltransform.position(initialize_properties_and_vertices());
+        m_ltransform.position = initialize_properties_and_vertices();
         update();
     }
     polygon(std::initializer_list<glm::vec2> verts)
@@ -53,7 +53,7 @@ template <std::size_t Capacity> class polygon final : public shape2D
                    .normals{verts.size()},
                    .model{verts.size()}}
     {
-        m_ltransform.position(initialize_properties_and_vertices());
+        m_ltransform.position = initialize_properties_and_vertices();
         update();
     }
 
