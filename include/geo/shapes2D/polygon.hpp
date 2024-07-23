@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geo/shapes2D/shape2D.hpp"
+#include "geo/shapes2D/shape.hpp"
 #include "geo/serialization/serialization.hpp"
-#include "geo/shapes2D/vertices2D.hpp"
+#include "geo/shapes2D/vertices.hpp"
 #include "kit/utility/utils.hpp"
 #include <vector>
 #include <array>

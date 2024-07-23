@@ -2,8 +2,8 @@
 
 #include "geo/shapes2D/circle.hpp"
 #include "geo/shapes2D/polygon.hpp"
-#include "geo/shapes2D/aabb2D.hpp"
-#include "geo/algorithm/ray2D.hpp"
+#include "geo/shapes2D/aabb.hpp"
+#include "geo/algorithm/ray.hpp"
 #include <glm/vec2.hpp>
 #include <array>
 #include <utility>

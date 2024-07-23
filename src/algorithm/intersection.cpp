@@ -1,5 +1,5 @@
 #include "geo/internal/pch.hpp"
-#include "geo/algorithm/intersection2D.hpp"
+#include "geo/algorithm/intersection.hpp"
 #include "geo/shapes2D/polygon.hpp"
 
 #include "kit/utility/utils.hpp"

@@ -1,5 +1,5 @@
 #include "geo/internal/pch.hpp"
-#include "geo/algorithm/ray2D.hpp"
+#include "geo/algorithm/ray.hpp"
 
 namespace geo
 {
