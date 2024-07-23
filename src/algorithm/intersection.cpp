@@ -1,6 +1,6 @@
 #include "geo/internal/pch.hpp"
 #include "geo/algorithm/intersection.hpp"
-#include "geo/shapes2D/polygon.hpp"
+#include "geo/shapes/polytope.hpp"
 
 #include "kit/utility/utils.hpp"
 

@@ -11,7 +11,8 @@ filter "system:macosx or linux"
       "-Wno-unused-parameter",
       "-Wno-sign-conversion",
       "-Wno-gnu-anonymous-struct",
-      "-Wno-nested-anon-types"
+      "-Wno-nested-anon-types",
+      "-Wno-string-conversion"
    }
 filter {}
 

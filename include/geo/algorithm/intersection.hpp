@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geo/shapes2D/circle.hpp"
-#include "geo/shapes2D/polygon.hpp"
-#include "geo/shapes2D/aabb.hpp"
+#include "geo/shapes/nsphere.hpp"
+#include "geo/shapes/polytope.hpp"
+#include "geo/shapes/aabb.hpp"
 #include "geo/algorithm/ray.hpp"
 #include <glm/vec2.hpp>
 #include <array>

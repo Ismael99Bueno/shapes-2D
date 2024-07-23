@@ -1,8 +1,8 @@
 #pragma once
 #ifdef KIT_USE_YAML_CPP
 
-#include "geo/shapes2D/circle.hpp"
-#include "geo/shapes2D/vertices.hpp"
+#include "geo/shapes/nsphere.hpp"
+#include "geo/shapes/vertices.hpp"
 #include "kit/serialization/yaml/codec.hpp"
 #include "kit/serialization/yaml/glm.hpp"
 #include "kit/serialization/yaml/transform.hpp"

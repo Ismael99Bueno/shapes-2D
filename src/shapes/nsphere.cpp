@@ -1,5 +1,5 @@
 #include "geo/internal/pch.hpp"
-#include "geo/shapes2D/circle.hpp"
+#include "geo/shapes/nsphere.hpp"
 #include "geo/serialization/serialization.hpp"
 
 namespace geo
