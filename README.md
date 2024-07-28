@@ -1,37 +1,27 @@
 # geometry
 
-geometry is a library for working with convex polygons in 2D space. It provides a variety of operations for building, manipulating, and analyzing polygons.
+This project is a library offering useful geometry utilities, including implementations of various shapes (polygons, circles, AABBs) and pairwise functions for shape intersections and ray casts. It primarily serves as the geometry module for my 2D physics engine, [poly-physx](https://github.com/ismawno/poly-physx).
 
 ## Features
 
-- Convex polygon implementation
-- Operations for translating, checking convexity, rotating, sorting vertices, computing center of mass, inertia, area, Minkowski sum and difference, and finding the closest edge to a point
-- AABB implementation for broad-phase collision detection
-- Supports saving and loading polygon state to/from an INI file using ini-parser
+- Implementation of convex polygon shapes
+- Implementation of circle shapes
+- AABB (Axis-Aligned Bounding Box) implementation for broad-phase collision detection
+- Ray casting functionalities
 
 ## Dependencies
 
-geometry depends on two other projects, all created by the same author:
-
 - [glm](https://github.com/g-truc/glm)
-- [debug-tools](https://github.com/ismawno/debug-tools)
-- [ini-parser](https://github.com/ismawno/ini-parser)
-- [profile-tools](https://github.com/ismawno/profile-tools)
-
-The [fetch_dependencies.py](https://github.com/ismawno/geometry/scripts/fetch_dependencies.py) script will automatically add all the dependencies as git submodules, provided that the user has already created their own repository and included the current project as a git submodule (or at least downloaded it into the repository). To ensure all runs smoothly once the script has been executed, do not rename the folders containing the various dependencies. All external dependencies, those not created by the same author, will be added as submodules within the [vendor](https://github.com/ismawno/geometry/vendor) folder.
+- [cpp-kit](https://github.com/ismawno/cpp-kit)
+- [yaml-cpp](https://github.com/ismawno/yaml-cpp) (optional)
+- [spdlog](https://github.com/gabime/spdlog) (optional)
 
 ## Building and Usage
 
-1. Ensure you have `premake5` and `make` installed on your system. `premake5` is used to generate the build files, and `make` is used to compile the project.
-2. Create your own repository and include the current project as a git submodule (or at least download it into the repository).
-3. Run the [fetch_dependencies.py](https://github.com/ismawno/geometry/scripts/fetch_dependencies.py) script located in the [scripts](https://github.com/ismawno/geometry/scripts) folder to automatically add all the dependencies as git submodules.
-4. Create an entry point project with a `premake5` file, where the `main.cpp` will be located. Link all libraries and specify the kind of the executable as `ConsoleApp`. Don't forget to specify the different configurations for the project.
-5. Create a `premake5` file at the root of the repository describing the `premake` workspace and including all dependency projects.
-6. Build the entire project by running the `make` command in your terminal. You can specify the configuration by using `make config=the_configuration`.
-7. To use geometry, simply include the [polygon.hpp](https://github.com/ismawno/geometry/include/geo/polygon.hpp) ot the [aabb2D.hpp](https://github.com/ismawno/geometry/include/geo/aabb2D.hpp) header in your project.
+This project is intended to be used as a git submodule within another project (parent repo). A premake file is provided for building and linking geometry.
 
-For more information on how to use geometry, please refer to the documentation.
+While these build instructions are minimal, this project is primarily for personal use. Although it has been built and tested on multiple machines (MacOS and Windows), it is not necessarily fully cross-platform or easy to build.
 
 ## License
 
-geometry is licensed under the MIT License. See LICENSE for more information.
+geometry is licensed under the MIT License. See LICENSE for more details.
